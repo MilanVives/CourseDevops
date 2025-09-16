@@ -95,6 +95,24 @@ Belangrijkste opties:
   docker rm <id|naam>
   ```  
 
+### Container ID en Namen
+- Docker kent elke container een unieke ID toe, maar je hoeft niet de volledige ID te gebruiken. Een deel van de ID is voldoende, zolang het uniek is binnen de actieve containers.
+- Als je een container een naam hebt gegeven met de optie `--name`, kun je die naam gebruiken in plaats van de ID.
+- Voorbeelden:
+  - Stop een container met deel van ID:  
+    ```bash
+    docker stop abc123
+    ```  
+    (in plaats van de volledige ID zoals `abc123def456`)
+  - Stop met naam:  
+    ```bash
+    docker stop mijncontainer
+    ```  
+  - Verwijder met deel van ID:  
+    ```bash
+    docker rm def456
+    ```  
+
 ### Inspectie
 - Gedetailleerde info over een container of image:  
   ```bash
