@@ -68,6 +68,15 @@ Belangrijkste opties:
   docker run -it --name mijncontainer ubuntu bash
   ```  
 
+### Detached Mode en Attach
+- **Detach van een container**: Wanneer je in een interactive container zit (bijv. na `docker run -it ubuntu bash`), druk **Ctrl+P+Q** om te detach. De container blijft draaien in de achtergrond zonder te stoppen.  
+- **Attach terug aan een detached container**: Gebruik `docker attach <container_id>` om terug te keren naar de terminal van de container. Dit werkt alleen als de container nog draait.  
+  Voorbeeld:  
+  ```bash
+  docker attach mijncontainer
+  ```  
+  Let op: Attach sluit de container af als je de shell verlaat met `exit` of Ctrl+D.  
+
 ### Containers beheren
 - Lijst actieve containers:  
   ```bash
@@ -224,7 +233,19 @@ docker push gebruikersnaam/mijnimage:v1
 ```
 
 ### Controleren
-- Bekijk je image op [https://hub.docker.com](https://hub.docker.com).  
+- Bekijk je image op [https://hub.docker.com](https://hub.docker.com).
+
+### Volledige Flow voor Publiceren
+1. **Start met een base image**: Pull een bestaande image, bv. `docker pull ubuntu`.
+2. **Run en wijzig container**: Start een container, maak aanpassingen (zie sectie 6 over `docker commit`).
+3. **Commit de wijzigingen**: Sla de aangepaste container op als nieuwe image: `docker commit <container_id> mijnimage:v1`.
+4. **Tag de image**: Geef de image een tag voor Docker Hub: `docker tag mijnimage:v1 gebruikersnaam/mijnimage:v1`.
+5. **Login en push**: Meld aan met `docker login`, push met `docker push gebruikersnaam/mijnimage:v1`.
+6. **Verifiëren**: Anderen kunnen nu `docker pull gebruikersnaam/mijnimage:v1` gebruiken.
+
+### Verschil Lokale vs Cloud Images
+- **Lokale images**: Opgeslagen op je eigen machine na `docker build`, `docker pull` of `docker commit`. Alleen jij hebt toegang, tenzij je ze deelt.
+- **Cloud images op Docker Hub**: Gedeelde images in de publieke repository. Iedereen kan ze pullen, maar alleen de eigenaar kan pushen/updaten. Gebruik voor distributie van aangepaste images naar teams of publiek.  
 
 ---
 
@@ -250,4 +271,50 @@ docker push gebruikersnaam/mijnimage:v1
 - Networking: standaard bridge, poortmapping en container-naar-container communicatie.  
 - `docker commit` laat je aangepaste images opslaan.  
 - Images kunnen gepubliceerd worden naar Docker Hub.  
-- Volgende les: **Dockerfile** en **Docker Compose**.  
+- Volgende les: **Dockerfile** en **Docker Compose**.
+
+---
+
+## 10. Extra Tips en Best Practices
+
+### Meer Docker Commando’s
+- **Images beheren**:  
+  - Pull een image van Docker Hub: `docker pull ubuntu:latest`  
+  - Verwijder een image: `docker rmi <image_id>`  
+  - Lijst alle images: `docker images`  
+
+- **Container logs bekijken**:  
+  - Bekijk logs van een container: `docker logs <container_id>`  
+  - Volg logs in real-time: `docker logs -f <container_id>`  
+
+- **Exec in een lopende container**:  
+  - Open een shell in een lopende container: `docker exec -it <container_id> bash`  
+
+- **Environment variables**:  
+  - Stel env vars in bij run: `docker run -e MY_VAR=value ubuntu`  
+
+### Best Practices
+- **Beveiliging**:  
+  - Voer containers niet als root uit tenzij noodzakelijk. Gebruik `--user` optie.  
+  - Scan images op vulnerabilities met tools zoals Docker Scan of Trivy.  
+
+- **Performance**:  
+  - Gebruik kleine base images (bijv. Alpine Linux) om container grootte te minimaliseren.  
+  - Vermijd grote layers in images door commando’s te combineren in Dockerfile (volgende les).  
+
+- **Opschoning**:  
+  - Verwijder ongebruikte containers: `docker container prune`  
+  - Verwijder ongebruikte images: `docker image prune`  
+  - Verwijder ongebruikte volumes: `docker volume prune`  
+
+- **Troubleshooting**:  
+  - Controleer container status: `docker ps -a`  
+  - Inspecteer container details: `docker inspect <container_id>`  
+  - Bekijk systeem resources: `docker stats`  
+
+### Voorbeelden in DevOps Context
+- **CI/CD Pipeline**: Gebruik Docker om consistente build environments te creëren.  
+- **Microservices**: Iedere service in een eigen container voor isolatie.  
+- **Scaling**: Combineer met tools zoals Kubernetes voor orchestration (geavanceerd).  
+
+Deze extra’s helpen je om Docker effectiever te gebruiken in praktijkscenario’s.  
