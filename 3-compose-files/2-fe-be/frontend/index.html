@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+
+  <p>List of foods from API: </p>
+
+  <ul id="list"></ul>
+    
+</body>
+</html>
+<script type="text/javascript">
+
+let li, ul;
+async function createList(data) {
+
+    const url = "http://localhost:3000";
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Response status: ${response.status}`);
+      }
+  
+      const json = await response.json();
+      console.log("Json", json);
+
+      for ( let i of json) {
+      ul = document.getElementById("list");
+      li = document.createElement("li");
+      li.innerHTML = i.color + " " + i.name;
+      ul.appendChild(li);
+    }
+    console.log("values:", ul)
+    } catch (error) {
+      console.error(error.message);
+    }
+  
+}
+
+createList();
+</script>
