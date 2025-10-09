@@ -1,11 +1,57 @@
-# 3 - Van `docker run` naar Compose
+# 3 - Van `docker run` naar Docker Compose
 
-In dit hoofdstuk begeleiden we je stap voor stap door de evolutie van onze frontend (`1-fe/index.html`) en de uitbreiding richting een volledige stack in `2-fe-be/`. We beginnen klein met één container, bouwen vervolgens een distributieklare image en eindigen met meerdere services via Docker Compose.
+## Inleiding: Een praktische reis door containerisatie
 
-## Stap 1: Snel starten met `docker run`
-We gebruiken de officiële `nginx`-image en mounten ons HTML-bestand als volume. Zo kun je lokaal wijzigen zonder te rebuilden.
+In dit hoofdstuk maken we een praktische reis van een eenvoudige HTML-pagina naar een volledige multi-container applicatie. We leren waarom Docker Compose ontstaan is en hoe het complexe deployments vereenvoudigt.
+
+**Het probleem dat we gaan oplossen:**
+- We beginnen met een eenvoudige statische website
+- We leren deze te containeriseren met Docker
+- We ondervinden de beperkingen van handmatig container-management
+- We ontdekken Docker Compose als oplossing voor complex multi-service deployment
+
+**Wat je zult leren:**
+- Waarom Docker alleen niet voldoende is voor echte applicaties
+- Hoe Docker Compose ontstaan is als antwoord op deployment-complexiteit
+- Praktische ervaring met de evolutie van simpel naar complex
+- Best practices voor moderne container orchestratie
+
+---
+
+## Fase 1: De eenvoudige start - Statische website
+
+### Het begin: Een simpele HTML-pagina
+
+In de map `3-compose-files/1-fe/` vinden we onze uitgangssituatie: een eenvoudige HTML-pagina met een hardgecodeerde lijst voedsel.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <p>List of foods from API: </p>
+  <ul id="list">
+    <li> Apple </li>
+    <li> Orange </li>
+    <li> Banana </li>
+    <li> Kiwi </li>
+  </ul>
+</body>
+</html>
+```
+
+**Het probleem:** Deze pagina is volledig statisch. In de echte wereld willen we data uit databases, API's die de frontend bedienen, en een infrastructure die schaalt.
+
+### Stap 1: Snel prototypen met `docker run`
+
+Voor ontwikkeling kunnen we snel starten met de officiële `nginx`-image en onze HTML als volume mounten:
 
 ```bash
+cd 3-compose-files
 docker run \
   --rm \
   -p 8080:80 \
@@ -13,18 +59,30 @@ docker run \
   nginx:1.27-alpine
 ```
 
-- `-p 8080:80` maakt de site bereikbaar op http://localhost:8080.
-- `-v ...:ro` mount het bestand read-only, zodat nginx het rechtstreeks serveert.
+**Uitleg van de parameters:**
+- `--rm`: Verwijder container automatisch na stoppen
+- `-p 8080:80`: Publiceer nginx poort 80 naar host poort 8080
+- `-v ...:ro`: Mount bestand read-only in de container
+- `nginx:1.27-alpine`: Lichtgewicht nginx variant
 
-### Waarom dit werkt
-- Perfect voor lokale experimenten: wijzig de HTML en refresh je browser.
-- Geen image-build nodig.
+**Voordelen van deze aanpak:**
+- Onmiddellijk resultaat: website draait op http://localhost:8080
+- Ontwikkelvriendelijk: wijzig HTML en refresh browser
+- Geen image-build proces nodig
+- Ideaal voor experimenten en snelle iteraties
 
-### Maar...
-- Je kunt zo geen kant-en-klare image aan een klant opleveren, want de content zit buiten de container.
+**Waarom dit niet voldoende is:**
+- **Niet distribueerbaar**: Content zit buiten de container
+- **Ontwikkel-only**: Kan niet naar productie of klanten
+- **Fragiel**: Afhankelijk van lokale bestanden
+- **Niet reproduceerbaar**: Werkt alleen op deze machine
 
-## Stap 2: Een distributeerbare image bouwen
-Daarom staat er een `Dockerfile` in `1-fe/`:
+### Stap 2: Een distributeerbare image bouwen
+
+**Het probleem herkennen:**
+Om onze applicatie naar productie of klanten te kunnen sturen, hebben we een self-contained image nodig. Hier komt de `Dockerfile` in beeld.
+
+In `1-fe/Dockerfile` zien we hoe we een distribueerbare image maken:
 
 ```dockerfile
 FROM nginx:1.27-alpine
@@ -33,103 +91,531 @@ EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 ```
 
-Bouw en start de image:
+**Bouw en test de image:**
 
 ```bash
+# Navigeer naar de juiste directory
+cd 3-compose-files
+
+# Bouw de image
 docker build -t fe-static:latest ./1-fe
 
+# Start de container
 docker run --rm -p 8081:80 fe-static:latest
 ```
 
-Voordelen:
-- Je krijgt een self-contained image die je naar een klant of registry kunt sturen.
+**Wat gebeurt er hier:**
+1. `FROM nginx:1.27-alpine`: Start met een lichtgewicht nginx basis
+2. `COPY index.html ...`: Kopieer onze content IN de image
+3. `EXPOSE 80`: Documenteer welke poort de service gebruikt
+4. `CMD ...`: Specificeer hoe nginx moet starten
 
-Beperking:
-- Bij elke wijziging in `index.html` moet je opnieuw `docker build` draaien. Dat kost tijd en je vergeet het soms.
+**Voordelen van deze aanpak:**
+- ✅ **Distribueerbaar**: Alles zit in de image
+- ✅ **Reproduceerbaar**: Image werkt overal waar Docker draait
+- ✅ **Versioned**: Je kunt verschillende versies taggen
+- ✅ **Productie-klaar**: Kan naar registry en deployment pipeline
 
-## Theorie: Hoe werkt Docker Compose?
-Docker Compose is een declaratieve laag bovenop Docker waarmee je meerdere containers als één applicatie beheert. Je beschrijft de gewenste toestand in YAML en Compose regelt de rest: bouwen, netwerken, volumes en volgorde van starten.
+**Nieuwe beperkingen:**
+- ❌ **Langzame ontwikkeling**: Elke HTML-wijziging vereist rebuild
+- ❌ **Statisch**: Geen mogelijkheid voor dynamische content
+- ❌ **Eenvoudig**: Echte applicaties hebben databases, API's, etc.
 
-### Bouwstenen van een `compose.yml`
-- `services`: elke service definieert één container (image) met zijn configuratie.
-- `volumes`: gedeelde opslag die containers kunnen gebruiken (persistentie of gedeelde bestanden).
-- `networks`: virtuele netwerken binnen het project, standaard krijgt elke service een interne hostname gelijk aan de servicenaam.
+### Dieper duiken in Dockerfile concepten
 
-### Voorbeeld: minimale stack
+**Waarom deze Dockerfile zo eenvoudig is:**
+De `1-fe/Dockerfile` is bewust simpel gehouden, maar in echte projecten zijn er veel meer overwegingen:
+
+```dockerfile
+# Meer geavanceerde Dockerfile voor frontend
+FROM nginx:1.27-alpine
+
+# Optioneel: installeer extra tools
+RUN apk add --no-cache curl
+
+# Kopieer content
+COPY index.html /usr/share/nginx/html/index.html
+
+# Optioneel: custom nginx configuratie
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Security: draai als non-root user
+RUN addgroup -g 1001 -S nginx-group && \
+    adduser -S nginx-user -u 1001 -G nginx-group
+
+USER nginx-user
+
+EXPOSE 80
+
+# Health check voor container status
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost/ || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+**Dockerfile best practices:**
+- **Multi-stage builds**: Scheid build-tijd van runtime dependencies
+- **Layer caching**: Kopieer eerst package files, dan code
+- **Security**: Gebruik non-root users waar mogelijk
+- **Size optimization**: Gebruik alpine variants en clean up na installaties
+- **Health checks**: Voeg health checks toe voor monitoring
+
+---
+
+## Fase 2: Complexiteit neemt toe - Het multi-service probleem
+
+### De realiteit van moderne webapplicaties
+
+Moderne applicaties bestaan zelden uit één container. Kijk naar de uitbreiding in `2-fe-be/`:
+
+**Frontend** (`2-fe-be/frontend/`):
+- Aangepaste HTML die data ophaalt via JavaScript
+- Maakt AJAX calls naar een backend API
+- Nog steeds geserveerd door nginx
+
+**Backend** (`2-fe-be/api/`):
+- Node.js Express server
+- Praat met MongoDB database
+- Serveert API endpoints voor de frontend
+
+**Database**:
+- MongoDB voor data persistentie
+- Moet toegankelijk zijn voor de backend
+- Data moet bewaard blijven tussen restarts
+
+### Het probleem met handmatig container management
+
+**Stel je voor dat je dit handmatig moet beheren:**
+
+```bash
+# Stap 1: Maak een custom network (vervanger van deprecated --link)
+docker network create foodapp-network
+
+# Stap 2: Start de database
+docker run -d \
+  --name mongodb \
+  --network foodapp-network \
+  -v dbdata:/data/db \
+  mongo
+
+# Stap 3: Bouw de backend image
+docker build -t foodapp-backend ./2-fe-be/api
+
+# Stap 4: Start de backend (moet wachten op database)
+docker run -d \
+  --name backend \
+  --network foodapp-network \
+  -p 3000:3000 \
+  -e PORT=3000 \
+  -e MONGO_URI=mongodb://mongodb:27017/foodsdb \
+  foodapp-backend
+
+# Stap 5: Bouw de frontend image  
+docker build -t foodapp-frontend ./2-fe-be/frontend
+
+# Stap 6: Start de frontend
+docker run -d \
+  --name frontend \
+  --network foodapp-network \
+  -p 8080:80 \
+  foodapp-frontend
+```
+
+### Uitleg van de handmatige parameters
+
+**Netwerk management (`--network`):**
+```bash
+docker network create foodapp-network
+--network foodapp-network
+```
+- **Waarom nodig**: Containers kunnen standaard niet met elkaar praten
+- **Custom networks**: Bieden automatische DNS resolution tussen containers
+- **Vervangt `--link`**: De oudere `--link` parameter is deprecated en minder flexibel
+
+**Oude `--link` methode (DEPRECATED):**
+```bash
+# OUDE MANIER - niet meer aanbevolen
+docker run -d --name mongodb mongo
+docker run -d --name backend --link mongodb:mongodb backend-image
+```
+- **Probleem met `--link`**: Alleen unidirectionele verbindingen
+- **Beperkt**: Werkt alleen met containers op dezelfde host
+- **Inflexibel**: Moeilijk om complexe netwerk topologieën te maken
+
+**Volume management (`-v`):**
+```bash
+-v dbdata:/data/db
+```
+- **Named volume**: Docker beheert de data persistent
+- **Alternative**: `-v /host/path:/container/path` voor bind mounts
+- **Waarom named volumes**: Portabel tussen verschillende hosts
+
+**Environment variables (`-e`):**
+```bash
+-e PORT=3000
+-e MONGO_URI=mongodb://mongodb:27017/foodsdb
+```
+- **Configuratie**: Externe configuratie zonder code aanpassingen
+- **Connection strings**: `mongodb://mongodb:27017` gebruikt container hostname
+- **Flexibiliteit**: Verschillende omgevingen (dev/test/prod) met andere waarden
+
+**Port mapping (`-p`):**
+```bash
+-p 3000:3000  # Host port 3000 -> Container port 3000
+-p 8080:80    # Host port 8080 -> Container port 80
+```
+- **Externe toegang**: Alleen gemapte poorten zijn bereikbaar van buitenaf
+- **Security**: Database heeft geen `-p` dus alleen intern bereikbaar
+- **Format**: `host_port:container_port`
+
+### Praktische problemen met handmatige orchestratie
+
+**1. Startup volgorde problemen:**
+```bash
+# Backend start voor database klaar is
+$ docker logs backend
+MongoNetworkError: failed to connect to server [mongodb:27017]
+```
+
+**2. Cleanup complexiteit:**
+```bash
+# Alles handmatig stoppen en opruimen
+docker stop frontend backend mongodb
+docker rm frontend backend mongodb
+docker network rm foodapp-network
+docker volume rm dbdata  # Dit verwijdert DATA!
+```
+
+**3. Development cycle frustratie:**
+```bash
+# Elke code wijziging vereist:
+docker stop backend
+docker rm backend
+docker build -t foodapp-backend ./2-fe-be/api
+docker run -d --name backend --network foodapp-network -p 3000:3000 -e PORT=3000 -e MONGO_URI=mongodb://mongodb:27017/foodsdb foodapp-backend
+```
+
+**4. Environment inconsistentie:**
+- Ontwikkelaar A vergeet `-e MONGO_URI` parameter
+- Ontwikkelaar B gebruikt andere poort mapping
+- Productie team gebruikt andere netwerk configuratie
+- Niemand weet meer welke exacte commando's nodig zijn
+
+**Problemen met deze aanpak:**
+- 🔥 **Foutgevoelig**: Verkeerde volgorde = crashes
+- 🔥 **Netwerk complexiteit**: Handmatig netwerk configureren
+- 🔥 **Niet herhaalbaar**: Verschillende commando's voor dev/test/prod
+- 🔥 **Moeilijk te onderhouden**: Updates vereisen vele stappen
+- 🔥 **Geen dependency management**: Backend start voor database klaar is
+- 🔥 **Command-line horror**: Lange, complexe commando's die niemand onthoudt
+- 🔥 **Inconsistente omgevingen**: Elke ontwikkelaar doet het anders
+- 🔥 **Documentatie nightmare**: Moeilijk om setup instructies up-to-date te houden
+
+### De ontstaan van Docker Compose
+
+**Docker Compose is ontstaan als antwoord op deze problemen:**
+
+> "Stel je voor dat je één commando kunt typen en alle containers starten in de juiste volgorde, met de juiste configuratie, en elkaar kunnen vinden..."
+
+Dit is precies wat Docker Compose doet!
+
+---
+
+## Theorie: Docker Compose fundamenten
+
+### Wat is Docker Compose?
+
+Docker Compose is een tool voor het definiëren en draaien van multi-container Docker applicaties. Met een YAML-bestand configureer je alle services van je applicatie, en met één commando start je alles op.
+
+**Kernprincipes:**
+- **Declaratief**: Je beschrijft WAT je wilt, niet HOE
+- **Herhalbaar**: Dezelfde configuratie werkt overal
+- **Geïsoleerd**: Elk project krijgt zijn eigen netwerk en namespace
+- **Ontwikkelaar-vriendelijk**: Ontworpen voor lokale ontwikkeling
+
+### Anatomie van een `compose.yml`
+
+Een Docker Compose bestand heeft deze hoofdsecties:
+
+```yaml
+services:          # Definitie van alle containers
+  web:
+    image: nginx
+    ports:
+      - "80:80"
+  
+networks:         # Optioneel: aangepaste netwerken
+  frontend:
+  backend:
+
+volumes:          # Optioneel: named volumes voor persistentie
+  dbdata:
+```
+
+### Services: Het hart van Compose
+
+Elke service definieert één container met zijn configuratie:
+
 ```yaml
 services:
-  web:
-    image: nginx:1.27-alpine
+  backend:
+    build: ./api                    # Bouw image uit Dockerfile
+    image: myapp-backend:latest     # Of gebruik bestaande image
     ports:
-      - "8080:80"
+      - "3000:3000"                # Publiceer poorten
+    environment:                   # Omgevingsvariabelen
+      - NODE_ENV=development
+      - DB_HOST=database
     volumes:
-      - ./site:/usr/share/nginx/html:ro
-  redis:
-    image: redis:7-alpine
+      - ./api:/app                 # Mount code voor ontwikkeling
+      - node_modules:/app/node_modules  # Cache dependencies
+    depends_on:                    # Start volgorde
+      - database
+    restart: unless-stopped        # Herstart policy
 ```
-- Compose maakt automatisch een projectnetwerk `projectnaam_default` waarop `web` en `redis` elkaar vinden via `http://redis:6379`.
-- Door `volumes` te gebruiken kun je lokale bestanden delen zonder de image te rebuilden.
 
-### Veelgebruikte keywords binnen een service
-- `image`: gebruik een bestaande image uit een registry.
-- `build`: laat Compose zelf een image bouwen; `context` wijst naar de map met de Dockerfile, optioneel met `dockerfile`, `args` en `target`.
-- `ports`: publiceer poorten naar de host, notatie `host:container` (bijv. `8080:80`).
-- `environment`: omgevingsvariabelen voor je container (`KEY=value` of `KEY: value`).
-- `volumes`: mount lokale paden of named volumes in de container.
-- `depends_on`: definieer een startvolgorde tussen services (let op: dit garandeert niet dat een service “ready” is).
-- `restart`: policy om containers automatisch te herstarten (`no`, `on-failure`, `always`, `unless-stopped`).
-- `command` en `entrypoint`: overschrijf het standaardcommando van de image.
+**Belangrijke service-opties:**
 
-### Netwerken in Compose
-- Standaard maakt Compose één intern bridge-netwerk. Services praten met elkaar via hun servicenaam (`backend` -> `http://mongodb:27017`).
-- Je kunt meerdere netwerken definiëren, bijvoorbeeld één voor interne communicatie en één gedeeld met andere projecten.
-- Een service kan meerdere netwerken krijgen, waarbij je per netwerk ook `aliases` kunt zetten.
+| Optie | Doel | Voorbeeld |
+|-------|------|-----------|
+| `image` | Gebruik bestaande image | `nginx:alpine` |
+| `build` | Bouw image van Dockerfile | `./backend` |
+| `ports` | Publiceer poorten naar host | `8080:80` |
+| `environment` | Omgevingsvariabelen | `DEBUG=true` |
+| `volumes` | Mount bestanden/directories | `./code:/app` |
+| `depends_on` | Definieer afhankelijkheden | `- database` |
+| `networks` | Verbind met netwerken | `- frontend` |
+| `restart` | Herstart policy | `on-failure` |
 
+### Networking: Services vinden elkaar
+
+**Automatische service discovery:**
+- Elke service is bereikbaar via zijn servicenaam
+- Compose maakt automatisch een intern netwerk
+- Services kunnen met elkaar praten via `http://servicename:port`
+
+```yaml
+services:
+  frontend:
+    image: nginx
+    # Kan praten met: http://backend:3000
+    
+  backend:
+    build: ./api
+    # Kan praten met: http://database:27017
+    
+  database:
+    image: postgres
+```
+
+### Volumes: Persistentie en development
+
+**Named volumes** (voor persistentie):
+```yaml
+services:
+  database:
+    image: postgres
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+
+volumes:
+  dbdata:  # Managed door Docker
+```
+
+**Bind mounts** (voor ontwikkeling):
+```yaml
+services:
+  app:
+    build: .
+    volumes:
+      - ./src:/app/src  # Live reload tijdens ontwikkeling
+```
+
+### Essentiële Compose commando's
+
+```bash
+# Start alle services
+docker compose up
+
+# Start in background
+docker compose up -d
+
+# Forceer rebuild
+docker compose up --build
+
+# Stop en verwijder alles
+docker compose down
+
+# Bekijk status
+docker compose ps
+
+# Bekijk logs
+docker compose logs
+docker compose logs backend
+
+# Voer commando uit in service
+docker compose exec backend bash
+
+# Valideer configuratie
+docker compose config
+```
+
+### Geavanceerde Compose concepten
+
+**1. Environment Files (.env):**
+```bash
+# .env bestand
+NODE_ENV=development
+MONGO_URI=mongodb://mongodb:27017/foodsdb
+API_PORT=3000
+WEB_PORT=8080
+```
+
+```yaml
+# compose.yml
+services:
+  backend:
+    build: ./api
+    ports:
+      - "${API_PORT}:3000"
+    env_file:
+      - .env
+```
+
+**2. Override files voor verschillende omgevingen:**
+```yaml
+# compose.override.yml (automatisch geladen)
+services:
+  backend:
+    volumes:
+      - ./api:/app  # Live code reloading voor development
+    environment:
+      - DEBUG=true
+```
+
+```yaml
+# compose.prod.yml (voor productie)
+services:
+  backend:
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    environment:
+      - NODE_ENV=production
+```
+
+**3. Multi-stage builds in compose context:**
+```dockerfile
+# Dockerfile met multi-stage build
+FROM node:18 AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+FROM node:18-alpine AS runtime
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY . .
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+```yaml
+# compose.yml met build argumenten
+services:
+  backend:
+    build:
+      context: ./api
+      target: runtime  # Gebruik de runtime stage
+      args:
+        - NODE_ENV=development
+```
+
+**4. Healthchecks en dependency management:**
+```yaml
+services:
+  mongodb:
+    image: mongo
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  backend:
+    build: ./api
+    depends_on:
+      mongodb:
+        condition: service_healthy  # Wacht tot MongoDB gezond is
+```
+
+**5. Networks en service isolation:**
 ```yaml
 networks:
-  internal:
-  public:
-    external: true
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+    internal: true  # Geen externe toegang
 
 services:
-  api:
+  frontend:
+    build: ./frontend
+    networks:
+      - frontend
+
+  backend:
     build: ./api
     networks:
-      - internal
-  gateway:
-    image: nginx:alpine
+      - frontend
+      - backend
+
+  mongodb:
+    image: mongo
     networks:
-      internal:
-      public:
-        aliases:
-          - gateway.app.local
+      - backend  # Alleen toegankelijk vanuit backend network
 ```
-- Met `external: true` gebruik je een reeds bestaand Docker-netwerk (handig voor reverse proxies zoals Traefik).
-- Gebruik `docker network ls` en `docker network inspect` om de verbindingen te onderzoeken.
 
-### Handige Compose-commando’s
-- `docker compose up` — bouwt (indien nodig) en start alle services; gebruik `-d` voor detached mode.
-- `docker compose up --build` — forceert een rebuild, handig na codewijzigingen.
-- `docker compose down` — stopt en verwijdert containers, netwerken en standaard-volumes.
-- `docker compose ps` — toont de status van alle services.
-- `docker compose logs [-f] [service]` — bekijk (live) logs, ideaal om fouten op te sporen.
-- `docker compose exec service bash` — voer een command uit in een draaiende container.
-- `docker compose config` — valideer en bekijk de samengevoegde configuratie.
-- `docker compose run --rm service command` — draai een losse taak (bijv. database migratie) buiten de reguliere lifecycle.
+**6. Volume types en gebruik:**
+```yaml
+volumes:
+  # Named volume - beheerd door Docker
+  dbdata:
+    driver: local
+  
+  # Named volume met custom configuratie
+  logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /host/logs
 
-### Best practices
-- Houd je projectstructuur overzichtelijk: één map per service met daarin de Dockerfile en code.
-- Voeg `.dockerignore`-bestanden toe om build-context kleiner te maken (snelheid en veiligheid).
-- Bewaar gevoelige configuratie in `.env`-bestanden en verwijs in Compose met `env_file`.
-- Gebruik named volumes voor data die je wilt behouden (`dbdata`, `cachedata`) en bind mounts voor lokale ontwikkelcode.
-- Combineer `depends_on` met healthchecks of retries in de applicatie (zoals `connectWithRetry`) zodat services robuust starten.
-- Kies duidelijke servicenames; ze worden hostnames binnen het netwerk.
-- Automatiseer opruimen met `docker compose down -v` wanneer je testdata wilt verwijderen.
+services:
+  backend:
+    volumes:
+      # Named volume voor persistentie
+      - dbdata:/data/db
+      
+      # Bind mount voor ontwikkeling
+      - ./api:/app
+      
+      # Volume voor logs
+      - logs:/var/log/app
+      
+      # Anonymous volume voor cache
+      - /app/node_modules
+```
 
-Met deze bouwstenen, voorbeelden en gewoontes beheer je grotere stacks zonder losse `docker run`-commando’s.
+---
 
-## Stap 3: Compose toepassen op `2-fe-be`
-In de map `2-fe-be/` vind je de uitbreiding met een Node.js-backend (`api/`), een aangepaste frontend (`frontend/`) en een MongoDB-service. De Compose-definitie staat in `2-fe-be/compose.yml` en ziet er samengevat zo uit:
+## Fase 3: Praktische toepassing - De volledige stack
+
+### Analyse van onze `2-fe-be/compose.yml`
 
 ```yaml
 services:
@@ -157,31 +643,930 @@ volumes:
   dbdata:
 ```
 
-### Wat gebeurt er hier?
-- `backend` bouwt de Node-image, luistert op poort 3000 en krijgt de database-URL via `MONGO_URI`.
-- `frontend` bouwt een nginx-image met de nieuwe frontend.
-- `mongodb` gebruikt de officiële `mongo`-image met een persistent volume (`dbdata`).
+### Service-by-service analyse
 
-### Compose draaien
-Navigeer naar de projectroot en start alle services:
+**1. Backend Service (`backend`):**
+```yaml
+backend:
+  build: ./api                    # Bouwt image van ./api/Dockerfile
+  ports:
+    - "3000:3000"                # Publiceert API naar localhost:3000
+  environment:
+    - PORT=3000                  # Node.js app luistert op poort 3000
+    - MONGO_URI=mongodb://mongodb:27017/foodsdb  # Database connectie
+  depends_on:
+    - mongodb                    # Start pas na MongoDB
+```
+
+**Backend Dockerfile analyse (`./api/Dockerfile`):**
+```dockerfile
+FROM node                       # Basis image met Node.js
+WORKDIR /app                   # Werkdirectory in container
+
+COPY package*.json .           # Kopieer package files eerst (layer caching)
+COPY . .                       # Kopieer rest van de code
+
+RUN npm i                      # Installeer dependencies
+
+EXPOSE 3000                    # Documenteer poort
+
+CMD node server.js             # Start commando
+```
+
+**Verbeteringen voor de backend Dockerfile:**
+```dockerfile
+# Betere versie van api/Dockerfile
+FROM node:18-alpine            # Specifieke versie + alpine voor kleinere size
+
+WORKDIR /app
+
+# Kopieer package files eerst voor betere caching
+COPY package*.json ./
+RUN npm ci --only=production   # Gebruik npm ci voor reproduceerbare builds
+
+# Kopieer source code
+COPY . .
+
+# Security: maak non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001 -G nodejs
+
+# Verander eigenaarschap van app directory
+RUN chown -R nodejs:nodejs /app
+USER nodejs
+
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000/health || exit 1
+
+CMD ["node", "server.js"]
+```
+
+**2. Frontend Service (`frontend`):**
+```yaml
+frontend:
+  build: ./frontend              # Bouwt image van ./frontend/Dockerfile
+  ports:
+    - "8080:80"                 # Publiceert website naar localhost:8080
+```
+
+**Frontend Dockerfile analyse (`./frontend/Dockerfile`):**
+```dockerfile
+FROM nginx                     # Basis nginx image
+COPY . /usr/share/nginx/html   # Kopieer alle bestanden naar nginx document root
+EXPOSE 80                      # Documenteer poort
+```
+
+**Verbeteringen voor de frontend Dockerfile:**
+```dockerfile
+# Betere versie van frontend/Dockerfile
+FROM nginx:1.27-alpine         # Specifieke versie + alpine
+
+# Kopieer alleen de bestanden die nodig zijn
+COPY index.html /usr/share/nginx/html/
+COPY *.css /usr/share/nginx/html/    # Als er CSS bestanden zijn
+COPY *.js /usr/share/nginx/html/     # Als er JS bestanden zijn
+
+# Custom nginx configuratie (optioneel)
+# COPY nginx.conf /etc/nginx/nginx.conf
+
+# Security: run as non-root
+RUN addgroup -g 1001 -S nginx-group && \
+    adduser -S nginx-user -u 1001 -G nginx-group
+
+# Verander eigenaarschap
+RUN chown -R nginx-user:nginx-group /usr/share/nginx/html
+RUN chown -R nginx-user:nginx-group /var/cache/nginx
+RUN chown -R nginx-user:nginx-group /var/log/nginx
+
+USER nginx-user
+
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost/ || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+**Wat doet de backend:**
+- Express.js server met REST API endpoints
+- Gebruikt MongoDB voor data persistentie
+- Heeft retry-logica voor database connecties (connectWithRetry)
+- Serveert JSON data voor de frontend
+
+**Backend dependency analysis:**
+```json
+// package.json dependencies
+{
+  "cors": "^2.8.5",        // Cross-Origin Resource Sharing
+  "express": "^4.21.1",    // Web framework
+  "mongoose": "^8.7.3"     // MongoDB ODM
+}
+```
+
+**Waarom deze dependencies:**
+- **CORS**: Frontend en backend draaien op verschillende poorten (8080 vs 3000)
+- **Express**: Lightweight web framework voor API endpoints
+- **Mongoose**: Object Document Mapper voor MongoDB, met connection pooling en retry logic
+
+**2. Frontend Service (`frontend`):**
+```yaml
+frontend:
+  build: ./frontend              # Bouwt image van ./frontend/Dockerfile
+  ports:
+    - "8080:80"                 # Publiceert website naar localhost:8080
+```
+
+**Wat doet de frontend:**
+- Nginx serveert aangepaste HTML/JavaScript
+- JavaScript maakt AJAX calls naar `http://localhost:3000`
+- Dynamisch laden van data in plaats van hardcoded lijst
+
+**3. Database Service (`mongodb`):**
+```yaml
+mongodb:
+  image: mongo                   # Gebruikt officiële MongoDB image
+  volumes:
+    - dbdata:/data/db           # Persistent data opslag
+```
+
+### Het Docker build proces uitgelegd
+
+**Wanneer je `docker compose up --build` uitvoert:**
 
 ```bash
-cd /Users/milan/Dev/devops/compose
+# Compose bouwt eerst alle images
+[+] Building 45.2s (12/12) FINISHED
+=> [backend internal] load build definition from Dockerfile
+=> [backend internal] load .dockerignore  
+=> [backend internal] load metadata for docker.io/library/node:latest
+=> [backend 1/6] FROM docker.io/library/node:latest
+=> [backend internal] load build context
+=> [backend 2/6] WORKDIR /app
+=> [backend 3/6] COPY package*.json .
+=> [backend 4/6] COPY . .
+=> [backend 5/6] RUN npm i
+=> [backend 6/6] EXPOSE 3000
+=> [backend] exporting to image
+```
 
+**Layer caching in actie:**
+```dockerfile
+# Slecht - elke code wijziging vereist npm install opnieuw
+FROM node
+WORKDIR /app
+COPY . .                    # Kopieer ALLES eerst
+RUN npm i                   # Elke keer opnieuw als code wijzigt
+CMD node server.js
+
+# Goed - npm install wordt gecached
+FROM node  
+WORKDIR /app
+COPY package*.json ./       # Kopieer alleen package files
+RUN npm i                   # Wordt alleen opnieuw gedaan als package.json wijzigt
+COPY . .                    # Kopieer code als laatste
+CMD node server.js
+```
+
+**Build context optimalisatie met .dockerignore:**
+```bash
+# .dockerignore (vergelijkbaar met .gitignore)
+node_modules
+*.log
+.git
+README.md
+.env
+coverage/
+.nyc_output
+```
+
+**Multi-stage builds voor productie:**
+```dockerfile
+# Development stage
+FROM node:18 AS development
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+CMD ["npm", "run", "dev"]
+
+# Production build stage  
+FROM node:18 AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN npm run build
+
+# Production runtime stage
+FROM node:18-alpine AS production
+WORKDIR /app
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/node_modules ./node_modules
+COPY package*.json ./
+USER node
+CMD ["npm", "start"]
+```
+
+**Compose met multi-stage builds:**
+```yaml
+services:
+  backend-dev:
+    build:
+      context: ./api
+      target: development  # Gebruik development stage
+    volumes:
+      - ./api:/app
+      - /app/node_modules
+  
+  backend-prod:
+    build:
+      context: ./api  
+      target: production   # Gebruik production stage
+```
+
+### Het netwerk-magic uitgelegd
+
+**Automatische service discovery in actie:**
+
+1. **Backend praat met MongoDB:**
+   ```javascript
+   // In server.js: MONGO_URI=mongodb://mongodb:27017/foodsdb
+   mongoose.connect(process.env.MONGO_URI)
+   ```
+   - `mongodb` = servicenaam wordt hostname
+   - Compose regelt DNS automatisch
+
+2. **Frontend praat met Backend:**
+   ```javascript
+   // In frontend/index.html
+   const url = "http://localhost:3000";
+   fetch(url)
+   ```
+   - Frontend draait in browser, dus `localhost` is host machine
+   - Backend is gepubliceerd op host poort 3000
+
+### Data persistence
+
+**Named volume `dbdata`:**
+- MongoDB data blijft bewaard tussen restarts
+- `docker compose down` verwijdert NIET de data
+- `docker compose down -v` verwijdert WEL de data
+
+### De stack starten
+
+**Stap 1: Navigeer naar de juiste directory**
+```bash
+cd 3-compose-files
+```
+
+**Stap 2: Start alle services**
+```bash
 docker compose -f 2-fe-be/compose.yml up --build
 ```
 
-- Gebruik `docker compose -f 2-fe-be/compose.yml logs backend` als de backend onverwachts stopt. Vaak wijst een exit code 0 op een proces dat klaar denkt te zijn; controleer of `node server.js` draait en of de database bereikbaar is.
-- Stoppen doe je met `Ctrl+C` of:
+**Wat gebeurt er:**
+1. Docker bouwt images voor `backend` en `frontend`
+2. MongoDB container start eerst
+3. Backend wacht op MongoDB en probeert connectie
+4. Frontend start als laatste
+5. Alle services kunnen met elkaar praten
 
+**Stap 3: Test de applicatie**
+- Open http://localhost:8080 (frontend)
+- Controleer of data wordt geladen via de API
+- Backend API is bereikbaar op http://localhost:3000
+
+### Debugging en monitoring
+
+**Bekijk logs van alle services:**
+```bash
+docker compose -f 2-fe-be/compose.yml logs
+```
+
+**Bekijk logs van specifieke service:**
+```bash
+docker compose -f 2-fe-be/compose.yml logs backend
+docker compose -f 2-fe-be/compose.yml logs -f frontend  # Live volgen
+```
+
+**Controleer status:**
+```bash
+docker compose -f 2-fe-be/compose.yml ps
+```
+
+**Ga in een draaiende container:**
+```bash
+docker compose -f 2-fe-be/compose.yml exec backend bash
+docker compose -f 2-fe-be/compose.yml exec mongodb mongosh
+```
+
+### Stoppen en opruimen
+
+**Graceful stop:**
 ```bash
 docker compose -f 2-fe-be/compose.yml down
 ```
 
-### Verbeterpunten om te verkennen
-- Voeg een `restart: on-failure` toe zodat services automatisch herstarten als ze crashen.
-- Breid `depends_on` uit met healthchecks als je zeker wilt zijn dat Mongo klaar is voordat de backend connect.
-- Deel `.env`-bestanden voor gevoelige variabelen in plaats van ze in de YAML te hardcoderen.
-- Voeg een gedeeld netwerk toe wanneer je services wilt koppelen aan externe reverse proxies of monitoring.
+**Stop en verwijder volumes (VERLIEST DATA!):**
+```bash
+docker compose -f 2-fe-be/compose.yml down -v
+```
 
-**Conclusie:** begin klein met `docker run`, lever een nette image met een Dockerfile, leer de theorie achter Docker Compose en pas die vervolgens toe op je groeiende stack. Zo begrijp je stap voor stap waarom Compose het werk vereenvoudigt zodra je meer dan één container beheert.
+### Container networking deep dive
+
+**Wat gebeurt er onder de motorkap:**
+
+1. **Network creation:**
+```bash
+# Compose maakt automatisch een network
+$ docker network ls
+NETWORK ID     NAME                 DRIVER    SCOPE
+a1b2c3d4e5f6   2-fe-be_default     bridge    local
+```
+
+2. **Container discovery:**
+```bash
+# Ga in backend container en test connectiviteit
+$ docker compose exec backend bash
+root@backend:/app# ping mongodb
+PING mongodb (172.18.0.3) 56(84) bytes of data.
+64 bytes from 2-fe-be_mongodb_1.2-fe-be_default (172.18.0.3): icmp_seq=1 ttl=64 time=0.045 ms
+
+# DNS resolution werkt automatisch
+root@backend:/app# nslookup mongodb
+Server:         127.0.0.11
+Address:        127.0.0.11#53
+
+Name:   mongodb
+Address: 172.18.0.3
+```
+
+3. **Port exposure vs publishing:**
+```yaml
+services:
+  mongodb:
+    image: mongo
+    expose:
+      - "27017"        # Alleen binnen Docker netwerk bereikbaar
+    # ports:           # GEEN publishing naar host
+    #   - "27017:27017"
+  
+  backend:
+    build: ./api
+    ports:
+      - "3000:3000"    # Gepubliceerd naar host (localhost:3000)
+```
+
+**Security implications:**
+- **Internal services**: Database alleen bereikbaar binnen Docker netwerk
+- **Published services**: Frontend en backend bereikbaar van buitenaf
+- **Network isolation**: Optioneel gescheiden netwerken voor extra security
+
+### Troubleshooting en debugging
+
+**Veelvoorkomende problemen en oplossingen:**
+
+**1. Database connection errors:**
+```bash
+# Check of MongoDB draait
+$ docker compose ps
+NAME              COMMAND                  SERVICE      STATUS
+2-fe-be-mongodb-1   "docker-entrypoint.s…"   mongodb      Up (healthy)
+
+# Check backend logs  
+$ docker compose logs backend
+backend-1  | Failed to connect to mongo on startup - retrying in 1 sec
+
+# Oplossing: Wacht tot healthcheck slaagt
+```
+
+**2. Port conflicts:**
+```bash
+# Error: port already in use
+ERROR: for frontend  Cannot start service frontend: 
+Ports are not available: exposing port 8080: listen tcp 0.0.0.0:8080: bind: address already in use
+
+# Oplossing: Verander poort mapping
+services:
+  frontend:
+    ports:
+      - "8081:80"  # Gebruik andere host poort
+```
+
+**3. Build context problemen:**
+```bash
+# Error: COPY failed
+COPY failed: file not found in build context
+
+# Oplossing: Check build context in compose file
+services:
+  backend:
+    build:
+      context: ./api        # Relatief tot compose.yml locatie
+      dockerfile: Dockerfile
+```
+
+**4. Volume permission issues:**
+```bash
+# Error: permission denied
+mongodb-1  | {"t":{"$date":"2024-01-01T10:00:00.000Z"},"s":"E","c":"STORAGE","id":20568,"ctx":"initandlisten","msg":"Error setting up listener: SocketException: Permission denied"}
+
+# Oplossing: Check volume ownership
+$ docker compose exec mongodb bash
+root@mongodb:/# ls -la /data/db
+drwxr-xr-x 2 mongodb mongodb 4096 Jan  1 10:00 .
+```
+
+### Performance optimalisatie
+
+**Development optimalisaties:**
+```yaml
+services:
+  backend:
+    build: ./api
+    volumes:
+      - ./api:/app              # Live reloading
+      - /app/node_modules       # Prevent overwriting node_modules
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true  # Voor file watching op sommige systemen
+```
+
+**Production optimalisaties:**
+```yaml
+services:
+  backend:
+    build:
+      context: ./api
+      target: production
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.50'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+```
+
+---
+
+## Fase 4: Inzichten en best practices
+
+### Wat hebben we geleerd?
+
+**Van simpel naar complex:**
+1. **Eenvoudige HTML**: Statisch, maar niet distribueerbaar
+2. **Docker image**: Distribueerbaar, maar alleen static content
+3. **Multi-container**: Echte applicatie met database en API
+4. **Docker Compose**: Alles gemanaged als één geheel
+
+**De kracht van Compose:**
+- ✅ Één commando voor hele stack
+- ✅ Consistente omgeving (dev = prod)
+- ✅ Automatisch netwerk en service discovery
+- ✅ Declaratieve configuratie
+- ✅ Eenvoudig te delen met team
+
+### Productie-overwegingen
+
+**Wat ontbreekt voor productie:**
+- **Healthchecks**: Controleer of services echt klaar zijn
+- **Restart policies**: Automatisch herstarten bij crashes
+- **Resource limits**: Memory en CPU begrenzingen
+- **Secrets management**: Veilige configuratie
+- **Monitoring**: Logs, metrics, alerting
+- **Backup strategie**: Database backups
+- **Load balancing**: Meerdere instances van services
+
+**Uitgebreide compose.yml voor productie:**
+```yaml
+services:
+  backend:
+    build: ./api
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env.production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  mongodb:
+    image: mongo
+    restart: unless-stopped
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - dbdata:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d:ro
+```
+
+### Best practices samengevat
+
+### Best practices samengevat
+
+**Compose file organisatie:**
+```yaml
+# compose.yml - Complete schema met commentaar
+version: '3.8'  # Optioneel - moderne Compose detecteert automatisch
+
+services:
+  backend:
+    build: 
+      context: ./api
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=${NODE_ENV:-development}
+    image: foodapp-backend:${VERSION:-latest}
+    container_name: foodapp-backend  # Custom naam in plaats van gegenereerde
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - MONGO_URI=mongodb://mongodb:27017/${DB_NAME:-foodsdb}
+    env_file:
+      - .env                    # Laad environment variabelen
+    volumes:
+      - ./api:/app             # Development: live reloading
+      - api_node_modules:/app/node_modules  # Cache node_modules
+    networks:
+      - backend
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:                     # Swarm mode / resource limits
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.50'
+    labels:                     # Metadata voor tooling
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`api.localhost`)"
+
+  frontend:
+    build: ./frontend
+    image: foodapp-frontend:${VERSION:-latest}
+    container_name: foodapp-frontend
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    networks:
+      - frontend
+    depends_on:
+      - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web.rule=Host(`localhost`)"
+
+  mongodb:
+    image: mongo:${MONGO_VERSION:-7}
+    container_name: foodapp-mongodb
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-admin123}
+      - MONGO_INITDB_DATABASE=${DB_NAME:-foodsdb}
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - backend
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    # ports:                    # Alleen voor development debugging
+    #   - "27017:27017"
+
+networks:
+  frontend:
+    driver: bridge
+    name: foodapp-frontend      # Custom network naam
+  backend:
+    driver: bridge
+    name: foodapp-backend
+    internal: false             # Set to true voor extra security
+
+volumes:
+  mongodb_data:
+    driver: local
+    name: foodapp-mongodb-data  # Custom volume naam
+  api_node_modules:
+    driver: local
+    name: foodapp-api-modules
+
+# Optioneel: externe resources
+# networks:
+#   external_network:
+#     external: true
+#     name: traefik-network
+
+# volumes:
+#   external_volume:
+#     external: true
+#     name: shared-data
+```
+
+**Environment file structuur (.env):**
+```bash
+# .env - Development defaults
+NODE_ENV=development
+VERSION=latest
+
+# Ports
+API_PORT=3000
+WEB_PORT=8080
+
+# Database
+MONGO_VERSION=7
+MONGO_ROOT_USER=admin
+MONGO_ROOT_PASSWORD=admin123
+DB_NAME=foodsdb
+
+# Optioneel: External services
+# REDIS_URL=redis://redis:6379
+# ELASTICSEARCH_URL=http://elasticsearch:9200
+```
+
+**Environment file per omgeving:**
+```bash
+# .env.production
+NODE_ENV=production
+VERSION=1.2.3
+
+API_PORT=3000
+WEB_PORT=80
+
+MONGO_VERSION=7-focal
+MONGO_ROOT_USER=produser
+MONGO_ROOT_PASSWORD=secure_password_123
+DB_NAME=foodsdb_prod
+```
+
+**Ontwikkeling:**
+- Gebruik bind mounts voor live code reloading
+- Publiceer poorten voor debugging
+- Gebruik descriptive service names
+- Voeg healthchecks toe voor betrouwbaarheid
+
+**Productie:**
+- Named volumes voor persistentie
+- Restart policies voor betrouwbaarheid
+- Resource limits voor stabiliteit
+- Environment files voor configuratie
+- Geen dev tools in production images
+
+**Algemeen:**
+- Houd compose.yml simpel en leesbaar
+- Documenteer complexe configuraties
+- Gebruik versie controle voor compose files
+- Test compose configuratie regelmatig
+
+---
+
+## Conclusie: De evolutie naar moderne deployment
+
+**De reis die we hebben afgelegd:**
+
+1. **`docker run`**: Snel prototypen, maar handmatig en foutgevoelig
+2. **Dockerfile**: Reproduceerbare images, maar nog steeds handmatig orchestreren
+3. **Docker Compose**: Declaratieve multi-service deployment
+
+**Waarom Docker Compose zo belangrijk is:**
+
+Docker Compose heeft de manier waarop we ontwikkelen en deployen fundamenteel veranderd. Het lost de kernproblemen op van moderne applicatie ontwikkeling:
+
+- **Complexiteit**: Van meerdere terminalscommando's naar één `docker compose up`
+- **Consistentie**: Dezelfde omgeving voor alle ontwikkelaars
+- **Reproducibility**: Works on my machine → works everywhere
+- **Collaboration**: Hele team kan stack starten met één commando
+
+**De volgende stap:**
+Docker Compose is perfect voor ontwikkeling en kleine productie omgevingen. Voor grote, gedistribueerde systemen kijk je naar orchestration platforms zoals Kubernetes, maar de concepten die je hier leert vormen de basis voor alles wat daarna komt.
+
+**Het belangrijkste inzicht:**
+Je bent begonnen met een simpele HTML pagina en eindigt met een volledige, professionele applicatie stack. Docker Compose heeft dit mogelijk gemaakt zonder de complexiteit te verbergen - je begrijpt nog steeds wat er onder de motorkap gebeurt, maar je hoeft het niet meer handmatig te beheren.
+
+---
+
+## Appendix: Geavanceerde concepten
+
+### Docker Compose in CI/CD pipelines
+
+**GitHub Actions voorbeeld:**
+```yaml
+# .github/workflows/test.yml
+name: Test Application
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Start services
+        run: |
+          docker compose -f 2-fe-be/compose.yml up -d --build
+          
+      - name: Wait for services
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:3000/health; do sleep 2; done'
+          
+      - name: Run tests
+        run: |
+          docker compose -f 2-fe-be/compose.yml exec -T backend npm test
+          
+      - name: Cleanup
+        if: always()
+        run: |
+          docker compose -f 2-fe-be/compose.yml down -v
+```
+
+### Docker Compose alternatieven en vergelijkingen
+
+**1. Kubernetes (voor productie):**
+```yaml
+# kubernetes deployment.yml equivalent
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: foodapp-backend:1.0.0
+        ports:
+        - containerPort: 3000
+        env:
+        - name: MONGO_URI
+          value: "mongodb://mongodb-service:27017/foodsdb"
+```
+
+**2. Docker Swarm (Compose compatible):**
+```yaml
+# Dezelfde compose.yml werkt met Swarm
+services:
+  backend:
+    image: foodapp-backend:1.0.0
+    deploy:
+      replicas: 3
+      placement:
+        constraints:
+          - node.role == worker
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+```
+
+**3. Podman Compose (alternatief voor Docker):**
+```bash
+# Werkt met dezelfde compose.yml
+podman-compose -f 2-fe-be/compose.yml up -d
+```
+
+### Monitoring en observability
+
+**Uitgebreide compose met monitoring:**
+```yaml
+services:
+  # Applicatie services...
+  backend:
+    build: ./api
+    # ... rest van configuratie
+    
+  frontend:
+    build: ./frontend
+    # ... rest van configuratie
+    
+  mongodb:
+    image: mongo
+    # ... rest van configuratie
+
+  # Monitoring services
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana:/etc/grafana/provisioning
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis_data:/data
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  redis_data:
+```
+
+### Veelgemaakte fouten en solutions
+
+**1. Volume permissions:**
+```bash
+# Probleem: Permission denied in container
+# Oplossing: Zorg voor juiste ownership
+RUN chown -R 1001:1001 /app
+USER 1001
+```
+
+**2. Network connectivity:**
+```bash
+# Probleem: Services kunnen elkaar niet vinden
+# Debug: Check network en DNS
+docker compose exec backend nslookup mongodb
+docker network inspect $(docker compose ps -q | head -1 | xargs docker inspect -f '{{range .NetworkSettings.Networks}}{{.NetworkID}}{{end}}')
+```
+
+**3. Environment variable scope:**
+```yaml
+# Probleem: Environment variabelen niet beschikbaar
+# Oplossing: Gebruik juiste syntax
+environment:
+  - NODE_ENV=production          # String format
+  # OF
+  NODE_ENV: production           # YAML format
+  # OF  
+env_file:
+  - .env                         # From file
+```
+
+**4. Build context confusion:**
+```yaml
+# Probleem: Dockerfile kan bestanden niet vinden
+# Oplossing: Juiste context instellen
+services:
+  app:
+    build:
+      context: ./backend          # Basis directory voor build
+      dockerfile: Docker/Dockerfile  # Relatief tot context
+```
+
+Deze uitgebreide documentatie geeft je nu een complete basis voor het begrijpen en toepassen van Docker Compose, van de eenvoudigste use cases tot enterprise-level deployments.
