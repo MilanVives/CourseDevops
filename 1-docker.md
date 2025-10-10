@@ -128,35 +128,285 @@ Belangrijkste opties:
 - Bestanden in containers bestaan zolang de container leeft.  
 - Nieuwe container starten = schone slate (geen data van vorige container).  
 
+![Docker Volumes Overview](images/docker-volumes-overview.png)
+
 ### Types volumes
-1. **Ephemeral (anonieme) volumes**  
+
+#### 1. **Ephemeral (anonieme) volumes**  
    - Worden aangemaakt zonder naam.  
    - Verdwijnen automatisch als de container verwijderd wordt.  
+   - Voorbeeld:
+     ```bash
+     docker run -v /data ubuntu
+     # Docker maakt automatisch een anoniem volume aan
+     ```
 
-2. **Named volumes**  
+#### 2. **Named volumes**  
    - Persistente opslag beheerd door Docker.  
+   - Overleven het verwijderen van containers.
    - Voorbeeld:  
      ```bash
      docker volume create mijnvolume
      docker run -v mijnvolume:/data ubuntu
+     
+     # Bekijk alle volumes
+     docker volume ls
+     
+     # Inspecteer een specifiek volume
+     docker volume inspect mijnvolume
      ```  
 
-3. **Bind mounts**  
+#### 3. **Bind mounts**  
    - Mappen van de host koppelen aan container.  
+   - Directe toegang tot host filesystem.
    - Voorbeeld:  
      ```bash
      docker run -v /home/user/data:/app/data ubuntu
      ```  
    - **Links van :** = host path, **rechts van :** = container path.  
 
+#### 4. **Volumes-from containers**
+   - Delen van volumes tussen containers via `--volumes-from`.
+   - Zeer krachtig voor data containers en backup strategieën.
+
+![Volumes-from Detailed](images/volumes-from-detailed.png)
+
+### --volumes-from in detail
+
+Het `--volumes-from` mechanisme laat je volumes van een container gebruiken in een andere container. Dit is bijzonder nuttig voor:
+- **Data containers**: Containers die alleen data bevatten
+- **Backup strategieën**: Eenvoudig backups maken van volumes
+- **Shared storage**: Meerdere containers dezelfde data laten gebruiken
+
+#### Praktisch voorbeeld: Data container pattern
+
+**Stap 1: Maak een data container**
+```bash
+# Data container met volumes (hoeft niet te draaien)
+docker create -v /shared-data --name datacontainer busybox
+
+# Of maak een draaiende data container
+docker run -d -v /shared-data --name datacontainer busybox tail -f /dev/null
+```
+
+**Stap 2: Gebruik de volumes in andere containers**
+```bash
+# Web applicatie die de data gebruikt
+docker run -d --volumes-from datacontainer --name webapp nginx
+
+# Database die data deelt
+docker run -d --volumes-from datacontainer --name database postgres
+
+# Backup container
+docker run --rm --volumes-from datacontainer \
+  -v $(pwd):/backup busybox \
+  tar czf /backup/backup.tar.gz /shared-data
+```
+
+#### Geavanceerd voorbeeld: Multi-container applicatie
+
+```bash
+# 1. Data container voor applicatie bestanden
+docker create -v /app/data -v /app/logs --name appdata busybox
+
+# 2. Web server die app data gebruikt
+docker run -d --volumes-from appdata \
+  --name webserver \
+  -p 8080:80 \
+  nginx
+
+# 3. Log processor die logs leest
+docker run -d --volumes-from appdata \
+  --name logprocessor \
+  alpine sh -c "tail -f /app/logs/*.log"
+
+# 4. Backup service
+docker run -d --volumes-from appdata \
+  --name backup \
+  -v $(pwd)/backups:/backup \
+  alpine sh -c "
+    while true; do
+      tar czf /backup/app-backup-\$(date +%Y%m%d-%H%M%S).tar.gz /app/data
+      sleep 3600  # Elk uur een backup
+    done
+  "
+```
+
+#### Hands-on oefening: Volume sharing
+
+**Scenario**: Maak een shared volume systeem voor een blog applicatie.
+
+```bash
+# Stap 1: Data container voor content
+docker run -d -v /blog/content -v /blog/uploads \
+  --name blogdata \
+  busybox tail -f /dev/null
+
+# Stap 2: Voeg wat content toe
+docker exec blogdata sh -c "
+  echo 'Welkom op mijn blog!' > /blog/content/index.html
+  echo 'Dit is mijn eerste post' > /blog/content/post1.html
+  mkdir -p /blog/uploads
+"
+
+# Stap 3: Web server
+docker run -d --volumes-from blogdata \
+  --name blogweb \
+  -p 8080:80 \
+  nginx
+
+# Stap 4: Content management systeem
+docker run -it --volumes-from blogdata \
+  --name cms \
+  alpine sh
+
+# In de CMS container kun je nu bestanden bewerken:
+# echo 'Nieuwe content!' > /blog/content/nieuws.html
+# ls -la /blog/content/
+
+# Stap 5: Backup maken
+docker run --rm --volumes-from blogdata \
+  -v $(pwd):/backup \
+  busybox \
+  tar czf /backup/blog-backup.tar.gz /blog
+
+# Stap 6: Restore testen
+docker run --rm \
+  -v $(pwd):/backup \
+  -v /tmp/restore:/restore \
+  busybox \
+  tar xzf /backup/blog-backup.tar.gz -C /restore
+```
+
+#### Volume troubleshooting
+
+**Veelvoorkomende problemen en oplossingen:**
+
+1. **Volume niet zichtbaar in container**
+   ```bash
+   # Check volume mounts
+   docker inspect containername | grep -A 10 '"Mounts"'
+   
+   # Verify volume exists
+   docker volume ls
+   docker volume inspect volumename
+   ```
+
+2. **Permission problemen**
+   ```bash
+   # Check ownership in container
+   docker exec container ls -la /path/to/volume
+   
+   # Fix permissions (als root)
+   docker exec -u root container chown -R user:group /path/to/volume
+   ```
+
+3. **Data verdwenen na restart**
+   ```bash
+   # Check of het een named volume is
+   docker volume ls
+   
+   # Anonieme volumes zijn verdwenen, gebruik named volumes:
+   docker run -v myvolume:/data image
+   ```
+
+4. **Volume cleanup**
+   ```bash
+   # Verwijder ongebruikte volumes
+   docker volume prune
+   
+   # Verwijder specifiek volume (pas op: data weg!)
+   docker volume rm volumename
+   
+   # Force verwijderen (zelfs als nog in gebruik)
+   docker volume rm -f volumename
+   ```
+
 ### Belangrijke aandachtspunten
+
+#### Volume lifecycle
 - Bij verwijderen container:  
   - Data in bind mounts blijft bestaan (want op host).  
   - Ephemeral volumes verdwijnen.  
-  - Named volumes blijven bestaan tenzij expliciet verwijderd (`docker volume rm`).  
+  - Named volumes blijven bestaan tenzij expliciet verwijderd (`docker volume rm`).
+  - Volumes-from containers houden hun volumes tot alle references weg zijn.
+
+#### Performance overwegingen
+- **Bind mounts**: Snelste performance, direct host access
+- **Named volumes**: Geoptimaliseerd door Docker, portable
+- **tmpfs mounts**: Geheugen storage, verliest data bij restart
+  ```bash
+  docker run --tmpfs /app/temp image  # Tijdelijke snelle storage
+  ```
+
+#### Security overwegingen
 - Bij bind mounts kunnen **conflicten** ontstaan:  
   - Bestanden op host overschrijven bestanden in container.  
-  - Container ziet altijd de versie van de host.  
+  - Container ziet altijd de versie van de host.
+- Container processen kunnen host bestanden wijzigen via bind mounts
+- Gebruik named volumes voor productie (beter geïsoleerd)
+
+#### Best practices
+1. **Gebruik named volumes** voor productie data
+2. **Bind mounts** alleen voor development
+3. **Data containers** voor shared volumes tussen services
+4. **Regular backups** van kritieke volumes
+5. **Volume labels** voor documentatie:
+   ```bash
+   docker volume create --label purpose=database --label env=production dbvolume
+   ```
+
+### Praktische volume commando's
+
+**Volume management:**
+```bash
+# Alle volumes tonen
+docker volume ls
+
+# Volume details
+docker volume inspect volumename
+
+# Volume aanmaken met opties
+docker volume create --driver local \
+  --opt type=nfs \
+  --opt o=addr=192.168.1.100,rw \
+  --opt device=:/path/to/dir \
+  nfsvolume
+
+# Container volumes inspecteren
+docker inspect container | jq '.[].Mounts'
+
+# Disk usage van volumes
+docker system df -v
+```
+
+**Backup en restore workflows:**
+```bash
+# Backup script
+#!/bin/bash
+CONTAINER_NAME=$1
+VOLUME_NAME=$2
+BACKUP_NAME="backup-$(date +%Y%m%d-%H%M%S).tar.gz"
+
+docker run --rm \
+  --volumes-from $CONTAINER_NAME \
+  -v $(pwd):/backup \
+  busybox \
+  tar czf /backup/$BACKUP_NAME /data
+
+echo "Backup created: $BACKUP_NAME"
+
+# Restore script
+#!/bin/bash
+BACKUP_FILE=$1
+NEW_CONTAINER=$2
+
+docker run --rm \
+  -v $NEW_CONTAINER-data:/data \
+  -v $(pwd):/backup \
+  busybox \
+  tar xzf /backup/$BACKUP_FILE -C /
+```  
 
 ---
 
