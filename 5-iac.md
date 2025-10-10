@@ -425,6 +425,160 @@ OpenTofu is een community-driven fork van Terraform:
 - **Community governance**
 - **Actieve development**
 
+### Declaratief vs Imperatief: Het Fundamentele Verschil
+
+#### **Terraform: Declaratieve Benadering**
+
+Terraform gebruikt een **declaratieve** programmeertaal (HCL - HashiCorp Configuration Language). Dit betekent dat je **beschrijft WAT je wilt**, niet HOE je het wilt bereiken.
+
+```hcl
+# Declaratief: "Ik wil 3 web servers"
+resource "google_compute_instance" "web" {
+  count        = 3
+  name         = "web-server-${count.index}"
+  machine_type = "f1-micro"
+  
+  boot_disk {
+    initialize_params {
+      image = "ubuntu-os-cloud/ubuntu-2004-lts"
+    }
+  }
+}
+```
+
+**Kenmerken van declaratieve taal:**
+- ✅ **Gewenste eindtoestand**: Je beschrijft hoe de infrastructuur eruit moet zien
+- ✅ **Idempotent**: Meerdere keren uitvoeren geeft hetzelfde resultaat
+- ✅ **State-aware**: Terraform weet wat er al bestaat
+- ✅ **Dependency resolution**: Automatische volgorde van resource creation
+- ✅ **Drift detection**: Kan wijzigingen buiten Terraform detecteren
+
+#### **Ansible: Imperatieve Benadering**
+
+Ansible gebruikt een **imperatieve** benadering via YAML playbooks. Je beschrijft **HOE je stappen uitvoert** om tot het gewenste resultaat te komen.
+
+```yaml
+# Imperatief: "Voer deze stappen uit"
+- name: Install and configure web servers
+  hosts: all
+  tasks:
+    - name: Update package cache
+      apt:
+        update_cache: yes
+        
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+        
+    - name: Start nginx service
+      systemd:
+        name: nginx
+        state: started
+        enabled: yes
+        
+    - name: Copy configuration file
+      copy:
+        src: nginx.conf
+        dest: /etc/nginx/nginx.conf
+      notify: restart nginx
+      
+  handlers:
+    - name: restart nginx
+      systemd:
+        name: nginx
+        state: restarted
+```
+
+**Kenmerken van imperatieve benadering:**
+- ✅ **Stap-voor-stap**: Duidelijke volgorde van acties
+- ✅ **Flexibiliteit**: Conditie logica en loops
+- ✅ **Fijnmazige controle**: Exacte controle over elk detail
+- ✅ **Geschikt voor configuratie**: Perfect voor software instellingen
+- ⚠️ **Volgorde belangrijk**: Stappen moeten in juiste volgorde uitgevoerd worden
+
+#### **Praktisch Verschil: Server Creation**
+
+**Terraform (Declaratief):**
+```hcl
+# Je zegt: "Ik wil 2 servers met deze specificaties"
+resource "google_compute_instance" "app" {
+  count = 2
+  name  = "app-server-${count.index}"
+  # ... configuratie
+}
+
+# Terraform bepaalt automatisch:
+# - Of servers al bestaan
+# - Welke moeten aangemaakt worden
+# - In welke volgorde (dependencies)
+# - Wat moet gewijzigd worden bij updates
+```
+
+**Ansible (Imperatief):**
+```yaml
+# Je zegt: "Voer deze acties uit op deze servers"
+- name: Configure application servers
+  hosts: app_servers
+  tasks:
+    - name: Check if application is installed
+      stat:
+        path: /opt/myapp
+      register: app_installed
+      
+    - name: Download application
+      get_url:
+        url: "{{ app_download_url }}"
+        dest: /tmp/app.tar.gz
+      when: not app_installed.stat.exists
+      
+    - name: Extract application
+      unarchive:
+        src: /tmp/app.tar.gz
+        dest: /opt/
+      when: not app_installed.stat.exists
+```
+
+#### **Waarom Beide Benaderingen Waardevol Zijn**
+
+| Aspect | Terraform (Declaratief) | Ansible (Imperatief) |
+|--------|-------------------------|----------------------|
+| **Best voor** | Infrastructure provisioning | Configuration management |
+| **Mindset** | "Wat wil ik hebben?" | "Hoe ga ik het doen?" |
+| **State** | Houdt state bij | Stateless (meestal) |
+| **Dependencies** | Automatisch berekend | Handmatig gedefinieerd |
+| **Updates** | Plan → Apply workflow | Playbook execution |
+| **Rollback** | Via state management | Via reverse playbooks |
+| **Learning curve** | Steiler voor beginners | Meer intuïtief |
+
+#### **Wanneer Welke Benadering?**
+
+**Gebruik Terraform (Declaratief) voor:**
+- 🏗️ Infrastructure provisioning (VMs, netwerken, storage)
+- 🔄 Lifecycle management van resources
+- 🌐 Multi-cloud deployments
+- 📊 Infrastructure die vaak wijzigt
+- 🎯 Wanneer je wilt beschrijven "wat je wilt"
+
+**Gebruik Ansible (Imperatief) voor:**
+- ⚙️ Software configuratie en deployment
+- 🔧 Complex multi-step procedures
+- 🎭 Orchestration van bestaande systemen
+- 📝 Wanneer je exacte controle over stappen nodig hebt
+- 🔄 Wanneer je "hoe je het doet" belangrijk is
+
+#### **Best Practice: Combinatie van Beide**
+
+```bash
+# 1. Declaratief: Maak infrastructuur met Terraform
+tofu apply
+
+# 2. Imperatief: Configureer servers met Ansible  
+ansible-playbook site.yml
+```
+
+Dit combineert de kracht van beide benaderingen voor complete automation workflows!
+
 ### Terraform/OpenTofu Installatie
 
 ```bash
@@ -484,10 +638,224 @@ tofu apply
 ```
 
 #### 4. **Destroy**: Infrastructuur opruimen
+
+**⚠️ KRITIEK: Waarom NOOIT handmatig verwijderen in cloud dashboards!**
+
+**❌ Verkeerde manier - Handmatig verwijderen:**
 ```bash
-tofu destroy
-# Removes all managed infrastructure
+# DOE DIT NOOIT:
+# - Ga naar GCP Console
+# - Verwijder VM instances handmatig
+# - Verwijder VPC handmatig  
+# - Verwijder firewall rules handmatig
 ```
+
+**Problemen met handmatig verwijderen:**
+1. **State drift**: Terraform state klopt niet meer met realiteit
+2. **Orphaned resources**: Vergeten resources blijven bestaan → kosten geld
+3. **Dependency issues**: Resources zijn vaak afhankelijk van elkaar
+4. **No rollback**: Geen manier om terug te gaan
+5. **Team confusion**: Anderen weten niet wat er gewijzigd is
+6. **Lost tracking**: Geen audit trail van wijzigingen
+
+**✅ Juiste manier - Terraform destroy:**
+```bash
+# Plan de destruction (veiligheidscheck)
+tofu plan -destroy
+
+# Output toont wat er verwijderd wordt:
+# Plan: 0 to add, 0 to change, 5 to destroy.
+#
+# Changes to Outputs:
+#   - ip = "34.78.123.45" -> null
+#
+# Do you want to perform these actions?
+
+# Voer destroy uit
+tofu destroy
+
+# Bevestig met: yes
+```
+
+**Waarom Terraform destroy beter is:**
+- ✅ **Intelligente volgorde**: Verwijdert resources in juiste volgorde (reverse dependencies)
+- ✅ **State synchronisatie**: Houdt state file bij
+- ✅ **Rollback mogelijkheid**: Kan altijd opnieuw tofu apply doen
+- ✅ **Audit trail**: Alle wijzigingen zijn gedocumenteerd
+- ✅ **Team-friendly**: Iedereen kan zien wat er gebeurd is
+- ✅ **Kostenbesparing**: Geen vergeten resources
+
+#### **Gedetailleerd Destroy Proces**
+
+**1. Destroy planning (veilig):**
+```bash
+# Bekijk wat er vernietigd wordt zonder het te doen
+tofu plan -destroy
+
+# Output voorbeeld:
+# Terraform will perform the following actions:
+#
+#   # google_compute_firewall.ssh-server will be destroyed
+#   - resource "google_compute_firewall" "ssh-server" {
+#       - name = "default-allow-ssh-terraform" -> null
+#       # ... more details
+#     }
+#
+#   # google_compute_instance.vm_instance will be destroyed  
+#   - resource "google_compute_instance" "vm_instance" {
+#       - name = "opentofu-instance" -> null
+#       # ... more details
+#     }
+#
+# Plan: 0 to add, 0 to change, 4 to destroy.
+```
+
+**2. Selective destroy (specifieke resources):**
+```bash
+# Verwijder alleen specifieke resource
+tofu destroy -target=google_compute_instance.vm_instance
+
+# Verwijder meerdere specifieke resources
+tofu destroy -target=google_compute_instance.vm_instance -target=google_compute_firewall.ssh-server
+```
+
+**3. Force destroy (zonder confirmatie - GEVAARLIJK):**
+```bash
+# Automatisch destroy zonder "yes" prompt
+tofu destroy -auto-approve
+
+# ⚠️ ALLEEN GEBRUIKEN IN AUTOMATION/CI/CD!
+# NOOIT HANDMATIG IN PRODUCTIE!
+```
+
+**4. Destroy met variable files:**
+```bash
+# Als je custom tfvars gebruikt
+tofu destroy -var-file="production.tfvars"
+
+# Met specifieke variables
+tofu destroy -var="environment=staging"
+```
+
+#### **Best Practices voor Resource Cleanup**
+
+**1. Altijd plan eerst:**
+```bash
+# Workflow voor veilige cleanup
+tofu plan -destroy              # 1. Bekijk wat er gebeurt
+tofu destroy                    # 2. Voer uit na review
+```
+
+**2. State backup voor destroy:**
+```bash
+# Backup state voor grote destroys
+cp terraform.tfstate terraform.tfstate.backup.$(date +%Y%m%d)
+tofu destroy
+```
+
+**3. Environment-specific destroy:**
+```bash
+# Per environment
+tofu workspace select staging
+tofu destroy
+
+tofu workspace select production  
+tofu plan -destroy  # EXTRA VOORZICHTIG IN PRODUCTIE!
+```
+
+**4. Protect kritieke resources:**
+```hcl
+# In je .tf files - voorkom accidental destroy
+resource "google_compute_instance" "critical_database" {
+  name = "prod-database"
+  
+  # Voorkom destroy via Terraform
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+```
+
+**5. Gradual destroy voor complexe setups:**
+```bash
+# Stap-voor-stap destroy van grote infrastructuur
+tofu destroy -target=google_compute_instance.web_servers
+tofu destroy -target=google_compute_instance.app_servers  
+tofu destroy -target=google_sql_database_instance.db
+tofu destroy  # Rest van infrastructure
+```
+
+#### **Troubleshooting Destroy Issues**
+
+**1. Resource dependencies:**
+```bash
+# Als destroy faalt door dependencies
+tofu destroy -target=dependent_resource
+tofu destroy  # Dan de rest
+```
+
+**2. External changes (drift):**
+```bash
+# Als resources handmatig gewijzigd zijn
+tofu refresh    # Update state met echte situatie
+tofu destroy    # Dan destroy
+```
+
+**3. Stuck resources:**
+```bash
+# Als resources niet kunnen worden verwijderd
+tofu state list                                    # Bekijk state
+tofu state rm google_compute_instance.stuck       # Remove van state
+# Handmatig opruimen in cloud console (als laatste redmiddel)
+```
+
+**4. Import vergeten resources:**
+```bash
+# Als je vergeten resources hebt
+tofu import google_compute_instance.existing projects/PROJECT/zones/ZONE/instances/INSTANCE
+tofu destroy  # Dan kan destroy ze vinden
+```
+
+#### **Cost Monitoring & Cleanup Automation**
+
+**1. Automated cleanup scripts:**
+```bash
+#!/bin/bash
+# cleanup-dev-environment.sh
+
+echo "Cleaning up development environment..."
+cd terraform/environments/dev
+tofu destroy -auto-approve
+echo "Dev environment cleaned up!"
+```
+
+**2. Scheduled cleanup (cron):**
+```bash
+# Automatisch dev environments opruimen elke vrijdag
+0 18 * * 5 /home/user/scripts/cleanup-dev-environment.sh
+```
+
+**3. Cost alerts integratie:**
+```hcl
+# Monitoring resource om kosten bij te houden
+resource "google_billing_budget" "dev_budget" {
+  billing_account = var.billing_account
+  display_name    = "Dev Environment Budget"
+  
+  budget_filter {
+    projects = ["projects/${var.project_id}"]
+  }
+  
+  amount {
+    specified_amount {
+      currency_code = "EUR"
+      units         = "100"  # 100 EUR budget
+    }
+  }
+}
+```
+
+**🎯 Onthoud: Terraform destroy is je veiligheidsnet tegen kostbare vergissingen en orphaned resources!**
 
 ### HCL (HashiCorp Configuration Language)
 
@@ -664,6 +1032,18 @@ tofu import google_compute_instance.web my-instance
 
 # Infrastructuur vernietigen
 tofu destroy
+
+# Plan destroy (safety check)
+tofu plan -destroy
+
+# Destroy specific resources
+tofu destroy -target=google_compute_instance.vm_instance
+
+# Auto-approve destroy (automation only!)
+tofu destroy -auto-approve
+
+# Destroy with variables
+tofu destroy -var-file="staging.tfvars"
 
 # Specifieke resource targeten
 tofu apply -target=google_compute_instance.vm_instance
@@ -1112,6 +1492,372 @@ resource "google_compute_target_pool" "web_pool" {
     - mysql
     - database_setup
 ```
+
+### Oefening 5: Declaratief vs Imperatief - Hands-on Vergelijking
+
+Deze oefening demonstreert het verschil tussen declaratieve en imperatieve benaderingen met een praktische server setup.
+
+#### **Scenario: Web Server met Database Setup**
+
+We gaan een web server met database opzetten op **twee manieren** om het verschil te ervaren.
+
+#### **Deel A: Terraform (Declaratief) - "WAT je wilt"**
+
+```hcl
+# infrastructure.tf
+variable "server_count" {
+  description = "Number of web servers"
+  default     = 2
+}
+
+# Declaratief: "Ik wil 2 web servers met deze specificaties"
+resource "google_compute_instance" "web_servers" {
+  count        = var.server_count
+  name         = "web-server-${count.index + 1}"
+  machine_type = "f1-micro"
+  zone         = "europe-west1-b"
+
+  boot_disk {
+    initialize_params {
+      image = "ubuntu-os-cloud/ubuntu-2004-lts"
+    }
+  }
+
+  network_interface {
+    network = google_compute_network.vpc.self_link
+    access_config {}
+  }
+
+  tags = ["web-server", "http-server"]
+
+  metadata = {
+    sshKeys = "${var.ssh_user}:${file(var.ssh_public_key)}"
+  }
+}
+
+# Declaratief: "Ik wil een database server"
+resource "google_compute_instance" "database" {
+  name         = "database-server"
+  machine_type = "n1-standard-1"
+  zone         = "europe-west1-b"
+
+  boot_disk {
+    initialize_params {
+      image = "ubuntu-os-cloud/ubuntu-2004-lts"
+      size  = 50  # Bigger disk for database
+    }
+  }
+
+  network_interface {
+    network = google_compute_network.vpc.self_link
+    access_config {}
+  }
+
+  tags = ["database-server"]
+}
+
+# Declaratief: "Ik wil een VPC netwerk"
+resource "google_compute_network" "vpc" {
+  name                    = "web-app-network"
+  auto_create_subnetworks = false
+}
+
+resource "google_compute_subnetwork" "subnet" {
+  name          = "web-subnet"
+  ip_cidr_range = "10.0.1.0/24"
+  region        = "europe-west1"
+  network       = google_compute_network.vpc.self_link
+}
+
+# Terraform figureert automatisch uit:
+# - Welke volgorde (VPC → Subnet → VMs)
+# - Welke dependencies
+# - Wat al bestaat vs wat nieuw is
+```
+
+**Terraform Uitvoering:**
+```bash
+# Terraform kijkt naar gewenste state vs huidige state
+tofu plan
+# Plan: 4 to add, 0 to change, 0 to destroy
+
+tofu apply
+# Terraform maakt automatisch:
+# 1. VPC network
+# 2. Subnet (hangt af van VPC)
+# 3. Web servers (hangen af van subnet)
+# 4. Database server
+
+# Als je later meer servers wilt:
+# Wijzig variable server_count = 4
+tofu plan
+# Plan: 2 to add, 0 to change, 0 to destroy (alleen nieuwe servers!)
+
+tofu apply
+# Terraform maakt alleen de 2 nieuwe servers aan
+```
+
+#### **Deel B: Ansible (Imperatief) - "HOE je het doet"**
+
+```yaml
+# setup-infrastructure.yml
+---
+- name: Setup Complete Web Application Infrastructure
+  hosts: localhost
+  gather_facts: no
+  vars:
+    servers_to_create:
+      - { name: "web-server-1", type: "web" }
+      - { name: "web-server-2", type: "web" }
+      - { name: "database-server", type: "db" }
+
+  tasks:
+    # Stap 1: Check if VPC exists
+    - name: Check if VPC network exists
+      google.cloud.gcp_compute_network_info:
+        filters:
+          - name = "web-app-network"
+      register: vpc_result
+
+    # Stap 2: Create VPC if it doesn't exist
+    - name: Create VPC network
+      google.cloud.gcp_compute_network:
+        name: "web-app-network"
+        auto_create_subnetworks: false
+        state: present
+      when: vpc_result.resources | length == 0
+
+    # Stap 3: Check if subnet exists
+    - name: Check if subnet exists
+      google.cloud.gcp_compute_subnetwork_info:
+        region: "europe-west1"
+        filters:
+          - name = "web-subnet"
+      register: subnet_result
+
+    # Stap 4: Create subnet if it doesn't exist
+    - name: Create subnet
+      google.cloud.gcp_compute_subnetwork:
+        name: "web-subnet"
+        ip_cidr_range: "10.0.1.0/24"
+        region: "europe-west1"
+        network:
+          selfLink: "projects/{{ gcp_project }}/global/networks/web-app-network"
+        state: present
+      when: subnet_result.resources | length == 0
+
+    # Stap 5: Check which servers already exist
+    - name: Get existing instances
+      google.cloud.gcp_compute_instance_info:
+        zone: "europe-west1-b"
+      register: existing_instances
+
+    # Stap 6: Create servers that don't exist yet
+    - name: Create web and database servers
+      google.cloud.gcp_compute_instance:
+        name: "{{ item.name }}"
+        machine_type: "{{ 'f1-micro' if item.type == 'web' else 'n1-standard-1' }}"
+        zone: "europe-west1-b"
+        disks:
+          - auto_delete: true
+            boot: true
+            initialize_params:
+              source_image: "projects/ubuntu-os-cloud/global/images/family/ubuntu-2004-lts"
+              disk_size_gb: "{{ 10 if item.type == 'web' else 50 }}"
+        network_interfaces:
+          - network:
+              selfLink: "projects/{{ gcp_project }}/global/networks/web-app-network"
+            subnetwork:
+              selfLink: "projects/{{ gcp_project }}/regions/europe-west1/subnetworks/web-subnet"
+            access_configs:
+              - name: External NAT
+                type: ONE_TO_ONE_NAT
+        tags:
+          items:
+            - "{{ item.type }}-server"
+            - "{{ 'http-server' if item.type == 'web' else 'database-server' }}"
+        state: present
+      loop: "{{ servers_to_create }}"
+      when: item.name not in (existing_instances.resources | map(attribute='name') | list)
+
+    # Stap 7: Configure web servers after they're created
+    - name: Wait for SSH to be available
+      wait_for:
+        port: 22
+        host: "{{ hostvars[item.name]['ansible_host'] }}"
+        delay: 30
+        timeout: 300
+      loop: "{{ servers_to_create }}"
+      when: item.type == 'web'
+
+    # Stap 8: Install web server software
+    - name: Install nginx on web servers
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+      delegate_to: "{{ item.name }}"
+      become: yes
+      loop: "{{ servers_to_create }}"
+      when: item.type == 'web'
+
+    # Stap 9: Configure database server
+    - name: Install MySQL on database server
+      apt:
+        name: mysql-server
+        state: present
+        update_cache: yes
+      delegate_to: "database-server"
+      become: yes
+
+# Ansible vereist dat je elke stap expliciet beschrijft
+```
+
+**Ansible Uitvoering:**
+```bash
+# Ansible voert elke stap uit in volgorde
+ansible-playbook setup-infrastructure.yml
+
+# Als je later meer servers wilt:
+# Wijzig de servers_to_create lijst
+# Ansible controleert weer alle stappen
+ansible-playbook setup-infrastructure.yml
+# Alle checks worden opnieuw uitgevoerd, alleen nieuwe servers worden toegevoegd
+```
+
+#### **Deel C: Cleanup Vergelijking**
+
+**Terraform Cleanup (Declaratief):**
+```bash
+# Terraform weet exact wat het heeft gemaakt
+tofu plan -destroy
+# Plan: 0 to add, 0 to change, 4 to destroy.
+#   - google_compute_instance.database
+#   - google_compute_instance.web_servers[0]
+#   - google_compute_instance.web_servers[1]
+#   - google_compute_network.vpc
+
+tofu destroy
+# Verwijdert alles in reverse dependency volgorde:
+# 1. VMs eerst (afhankelijk van subnet)
+# 2. Subnet (afhankelijk van VPC)
+# 3. VPC als laatste
+```
+
+**Ansible Cleanup (Imperatief):**
+```yaml
+# cleanup-infrastructure.yml
+---
+- name: Cleanup Complete Infrastructure
+  hosts: localhost
+  tasks:
+    # Stap 1: Stop all services first
+    - name: Stop nginx on web servers
+      systemd:
+        name: nginx
+        state: stopped
+      delegate_to: "{{ item }}"
+      become: yes
+      loop:
+        - web-server-1
+        - web-server-2
+      ignore_errors: yes
+
+    # Stap 2: Delete instances in correct order
+    - name: Delete web servers first
+      google.cloud.gcp_compute_instance:
+        name: "{{ item }}"
+        zone: "europe-west1-b"
+        state: absent
+      loop:
+        - web-server-1
+        - web-server-2
+
+    # Stap 3: Delete database server
+    - name: Delete database server
+      google.cloud.gcp_compute_instance:
+        name: "database-server"
+        zone: "europe-west1-b"
+        state: absent
+
+    # Stap 4: Wait for instances to be fully deleted
+    - name: Wait for instances to be deleted
+      pause:
+        seconds: 30
+
+    # Stap 5: Delete subnet
+    - name: Delete subnet
+      google.cloud.gcp_compute_subnetwork:
+        name: "web-subnet"
+        region: "europe-west1"
+        state: absent
+
+    # Stap 6: Delete VPC
+    - name: Delete VPC network
+      google.cloud.gcp_compute_network:
+        name: "web-app-network"
+        state: absent
+
+# Je moet handmatig de juiste volgorde bepalen!
+```
+
+#### **Praktische Opdrachten**
+
+**1. Terraform Oefening:**
+```bash
+# Maak de infrastructuur
+cd terraform-declarative/
+tofu init
+tofu plan
+tofu apply
+
+# Schaal op (wijzig server_count naar 4)
+tofu plan  # Bekijk wat er wijzigt
+tofu apply
+
+# Schaal af (wijzig server_count naar 1)
+tofu plan  # Bekijk wat er verwijderd wordt
+tofu apply
+
+# Volledige cleanup
+tofu destroy
+```
+
+**2. Ansible Oefening:**
+```bash
+# Maak de infrastructuur
+cd ansible-imperative/
+ansible-playbook setup-infrastructure.yml
+
+# Voeg servers toe (wijzig servers_to_create lijst)
+ansible-playbook setup-infrastructure.yml
+
+# Cleanup
+ansible-playbook cleanup-infrastructure.yml
+```
+
+**3. Vergelijkings-analyse:**
+
+| Aspect | Terraform (Declaratief) | Ansible (Imperatief) |
+|--------|--------------------------|----------------------|
+| **Code lengte** | ±50 regels | ±150+ regels |
+| **Dependency management** | Automatisch | Handmatig in juiste volgorde |
+| **State awareness** | Weet wat bestaat | Moet elke keer checken |
+| **Scaling up** | Wijzig getal → apply | Wijzig lijst → veel checks |
+| **Scaling down** | Wijzig getal → apply | Expliciete delete stappen |
+| **Cleanup** | 1 commando | Multi-step playbook |
+| **Error handling** | Built-in rollback | Handmatige error handling |
+
+#### **Leeruitkomsten**
+
+Na deze oefening begrijp je:
+- ✅ **Waarom declaratief efficiënter is** voor infrastructuur
+- ✅ **Hoe Terraform dependencies automatisch oplost**
+- ✅ **Waarom cleanup met Terraform veiliger is**
+- ✅ **Wanneer imperative benadering nuttig is**
+- ✅ **Hoe beide tools complementair zijn**
+
+**🎯 Conclusie: Terraform voor "WAT", Ansible voor "HOE"!**
 
 ---
 
