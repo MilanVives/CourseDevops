@@ -1,0 +1,12 @@
+[mycloudvms]
+141.144.203.33
+projectwerk.vives.be
+linux.vives.live
+
+[mycloudvms:vars]
+
+ansible_user=root
+ansible_password=P@ssword123
+
+[ubuntu-servers]
+141.148.235.108

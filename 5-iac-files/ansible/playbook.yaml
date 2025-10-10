@@ -1,0 +1,51 @@
+---
+- name: Example Playbook for Ubuntu Servers
+  hosts: all
+  become: yes
+  vars:
+    new_user: devopsuser
+    ssh_pub_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD..."
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+
+    - name: Install essential packages
+      apt:
+        name:
+          - git
+          - curl
+          - htop
+        state: present
+
+    - name: Create a new user
+      user:
+        name: "{{ new_user }}"
+        shell: /bin/bash
+        state: present
+        groups: sudo
+
+    - name: Add SSH key for new user
+      authorized_key:
+        user: "{{ new_user }}"
+        key: "{{ ssh_pub_key }}"
+
+    - name: Ensure UFW is installed
+      apt:
+        name: ufw
+        state: present
+
+    - name: Allow SSH through firewall
+      ufw:
+        rule: allow
+        name: OpenSSH
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+        enabled: yes
