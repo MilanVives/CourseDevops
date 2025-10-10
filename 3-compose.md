@@ -893,22 +893,441 @@ services:
 
 **Automatische service discovery in actie:**
 
-1. **Backend praat met MongoDB:**
-   ```javascript
-   // In server.js: MONGO_URI=mongodb://mongodb:27017/foodsdb
-   mongoose.connect(process.env.MONGO_URI)
-   ```
-   - `mongodb` = servicenaam wordt hostname
-   - Compose regelt DNS automatisch
+![Docker Compose Service DNS](images/compose-service-dns.png)
 
-2. **Frontend praat met Backend:**
-   ```javascript
-   // In frontend/index.html
-   const url = "http://localhost:3000";
-   fetch(url)
-   ```
-   - Frontend draait in browser, dus `localhost` is host machine
-   - Backend is gepubliceerd op host poort 3000
+#### Het probleem met IP-gebaseerde communicatie
+
+Voordat we Docker Compose hadden, moesten containers elkaar bereiken via IP-adressen:
+
+```bash
+# Handmatige container setup (de ouderwetse manier)
+docker run -d --name mongodb mongo
+docker run -d --name backend \
+  -e MONGO_URI=mongodb://172.17.0.3:27017/foodsdb \
+  backend-image
+
+# Problemen:
+# - IP adressen kunnen wijzigen bij restart
+# - Niet leesbaar of onderhoudbaar
+# - Geen load balancing
+# - Foutgevoelig bij typing
+```
+
+#### De Docker Compose oplossing: Service Namen
+
+Docker Compose lost dit op met **automatische DNS resolutie**:
+
+```yaml
+services:
+  backend:
+    build: ./api
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/foodsdb  # Servicenaam!
+    
+  mongodb:
+    image: mongo
+```
+
+**Wat gebeurt er automatisch:**
+1. Docker Compose maakt een intern netwerk
+2. Elke service krijgt een DNS entry met zijn servicenaam
+3. Containers kunnen elkaar bereiken via servicenaam
+4. Docker regelt de IP resolutie automatisch
+
+![Service Communicatie](images/compose-service-communication.png)
+
+### Praktische voorbeelden van service name resolution
+
+#### 1. **Backend praat met MongoDB:**
+```javascript
+// In server.js: MONGO_URI=mongodb://mongodb:27017/foodsdb
+mongoose.connect(process.env.MONGO_URI)
+```
+- `mongodb` = servicenaam wordt automatisch hostname
+- Docker DNS zet `mongodb` om naar het juiste IP adres
+- Compose regelt dit automatisch, geen configuratie nodig
+
+#### 2. **Frontend praat met Backend:**
+
+**Probleem scenario** (binnen container-to-container):
+```javascript
+// FOUT: Dit werkt niet tussen containers
+const url = "http://localhost:3000";
+fetch(url)  // localhost verwijst naar de frontend container zelf
+```
+
+**Juiste aanpak** (service namen gebruiken):
+```javascript
+// CORRECT: Gebruik service naam voor interne communicatie
+const url = "http://backend:3000";
+fetch(url)  // backend wordt automatisch geresolv'd naar IP
+```
+
+**Voor browser-to-backend** (vanuit browser):
+```javascript
+// In browser JavaScript: gebruik host machine IP
+const url = "http://localhost:3000";  // Via port mapping
+fetch(url)
+```
+
+### Geavanceerde service name features
+
+#### Service aliases voor flexibiliteit
+
+```yaml
+services:
+  web:
+    build: ./frontend
+    networks:
+      default:
+        aliases:
+          - frontend
+          - webapp
+          - ui
+          
+  api:
+    build: ./backend
+    networks:
+      default:
+        aliases:
+          - backend
+          - server
+          - rest-api
+```
+
+**Nu werken alle deze namen:**
+```bash
+# Allemaal wijzen naar dezelfde container
+curl http://web:80
+curl http://frontend:80
+curl http://webapp:80
+curl http://ui:80
+
+# API bereiken
+curl http://api:3000
+curl http://backend:3000
+curl http://server:3000
+curl http://rest-api:3000
+```
+
+#### Multi-network service discovery
+
+```yaml
+networks:
+  frontend:
+  backend:
+  
+services:
+  nginx:
+    image: nginx
+    networks:
+      - frontend
+      
+  app:
+    build: ./app
+    networks:
+      - frontend  # Kan praten met nginx
+      - backend   # Kan praten met database
+      
+  database:
+    image: postgres
+    networks:
+      - backend   # Alleen bereikbaar vanuit backend network
+```
+
+**Network scope van service namen:**
+- Service namen werken alleen binnen hetzelfde netwerk
+- `app` kan `nginx` EN `database` bereiken
+- `nginx` kan NIET rechtstreeks met `database` praten
+
+### Hands-on testing van service names
+
+#### DNS resolution testen
+
+```bash
+# Start de compose stack
+docker compose -f 2-fe-be/compose.yml up -d
+
+# Ga in backend container
+docker compose -f 2-fe-be/compose.yml exec backend bash
+
+# Test DNS resolution
+nslookup mongodb
+# Output:
+# Server:         127.0.0.11
+# Address:        127.0.0.11#53
+# Name:   mongodb
+# Address: 172.18.0.3
+
+# Test connectivity met ping
+ping mongodb
+# PING mongodb (172.18.0.3) 56(84) bytes of data.
+# 64 bytes from 2-fe-be_mongodb_1.2-fe-be_default (172.18.0.3): icmp_seq=1 ttl=64
+
+# Test HTTP connectiviteit
+curl http://frontend:80
+# Haalt HTML op van frontend service
+```
+
+#### Service discovery debugging
+
+```bash
+# Bekijk alle services in het netwerk
+docker compose ps
+
+# Inspecteer netwerk configuratie
+docker network ls
+docker network inspect 2-fe-be_default
+
+# Check DNS servers in container
+docker compose exec backend cat /etc/resolv.conf
+# nameserver 127.0.0.11  <- Docker's embedded DNS server
+
+# Test service resolution van buitenaf
+docker run --rm --network 2-fe-be_default alpine nslookup backend
+```
+
+### Veelgemaakte fouten en oplossingen
+
+#### 1. **Service naam typfouten**
+```yaml
+# FOUT: Typo in service naam
+services:
+  databse:  # Fout gespeld!
+    image: postgres
+  
+  app:
+    environment:
+      - DB_HOST=database  # Verwijst naar non-existente service
+```
+
+**Oplossing:**
+```bash
+# Debug met nslookup
+docker compose exec app nslookup database
+# nslookup: can't resolve 'database': Name or service not known
+
+# Check beschikbare services
+docker compose ps
+```
+
+#### 2. **Wrong network context**
+```yaml
+services:
+  web:
+    networks:
+      - frontend
+  
+  api:
+    networks:
+      - backend  # Andere network!
+```
+
+```bash
+# web kan api NIET bereiken
+docker compose exec web ping api
+# ping: api: Name or service not known
+```
+
+**Oplossing**: Zorg dat services op hetzelfde netwerk zitten.
+
+#### 3. **Port confusion**
+```javascript
+// FOUT: Verkeerde poort
+fetch('http://backend:80')  // Backend luistert op 3000, niet 80
+
+// CORRECT: Juiste interne poort
+fetch('http://backend:3000')  // Backend container port
+```
+
+#### 4. **Browser vs container context**
+```javascript
+// In browser JavaScript (FOUT):
+fetch('http://backend:3000')  // Browser kent service naam niet
+
+// In browser JavaScript (CORRECT):
+fetch('http://localhost:3000')  // Via host port mapping
+
+// In container JavaScript (CORRECT):
+fetch('http://backend:3000')  // Service naam werkt
+```
+
+### Load balancing met service namen
+
+#### Meerdere instances van een service
+
+```yaml
+services:
+  web:
+    build: ./frontend
+    
+  app:
+    build: ./backend
+    scale: 3  # Drie instances van backend
+    
+  database:
+    image: postgres
+```
+
+```bash
+# Start met schaling
+docker compose up --scale app=3
+
+# Service naam verdeelt load automatisch
+curl http://app:3000  # Kan naar app_1, app_2, of app_3 gaan
+```
+
+**Automatische load balancing:**
+- Docker DNS round-robin tussen instances
+- Service naam blijft hetzelfde
+- Transparant voor andere services
+
+### Advanced service discovery patterns
+
+#### Health check gebaseerde discovery
+
+```yaml
+services:
+  app:
+    build: ./app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    
+  proxy:
+    image: nginx
+    depends_on:
+      app:
+        condition: service_healthy  # Wacht tot app gezond is
+```
+
+#### Service discovery met external networks
+
+```yaml
+# Gedeeld netwerk tussen projecten
+networks:
+  shared:
+    external: true
+    name: company-network
+
+services:
+  api:
+    networks:
+      - shared
+    # Nu bereikbaar als 'api' vanuit andere projecten op hetzelfde netwerk
+```
+
+### Best practices voor service naming
+
+#### 1. **Duidelijke, beschrijvende namen**
+```yaml
+services:
+  user-service:        # ✅ Duidelijk
+    build: ./users
+    
+  payment-gateway:     # ✅ Specifiek
+    build: ./payments
+    
+  cache:              # ✅ Functioneel
+    image: redis
+    
+  # Vermijd:
+  app1:               # ❌ Niet beschrijvend
+  container2:         # ❌ Te generiek
+```
+
+#### 2. **Consistente naming conventions**
+```yaml
+services:
+  # Microservices pattern
+  user-service:
+  order-service:
+  payment-service:
+  
+  # Database naming
+  user-db:
+  order-db:
+  
+  # Infrastructure
+  redis-cache:
+  nginx-proxy:
+```
+
+#### 3. **Environment-specific configurations**
+```yaml
+# compose.yml (base)
+services:
+  database:
+    image: postgres
+    
+# compose.override.yml (development)
+services:
+  database:
+    networks:
+      default:
+        aliases:
+          - db
+          - postgres
+          - dev-db
+
+# compose.prod.yml (production)  
+services:
+  database:
+    networks:
+      default:
+        aliases:
+          - db
+          - postgres
+          - prod-db
+```
+
+### Troubleshooting service discovery
+
+#### Common debugging commands
+
+```bash
+# 1. Check service is running
+docker compose ps
+
+# 2. Test DNS resolution
+docker compose exec service_name nslookup target_service
+
+# 3. Test network connectivity  
+docker compose exec service_name ping target_service
+
+# 4. Check network configuration
+docker network inspect project_default
+
+# 5. Test HTTP connectivity
+docker compose exec service_name curl http://target_service:port
+
+# 6. Check service logs
+docker compose logs target_service
+
+# 7. Inspect service configuration
+docker compose config
+```
+
+#### Advanced network debugging
+
+```bash
+# Show all containers in network
+docker network inspect project_default | jq '.[0].Containers'
+
+# DNS debug in container
+docker compose exec app sh
+> dig backend
+> nslookup backend  
+> getent hosts backend
+
+# Network routing table
+docker compose exec app ip route show
+
+# Active connections
+docker compose exec app netstat -tuln
+```
 
 ### Data persistence
 
