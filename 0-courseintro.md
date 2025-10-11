@@ -74,27 +74,21 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
 - LoadBalancer services en external access
 - Praktische eerste stappen met cloud Kubernetes
 
-**Les 7 – Kubernetes Fundamentals & Theory**
+**Les 7 – Kubernetes Fundamentals & Local Development**
 
-- Kubernetes architectuur: control plane, nodes, pods
-- Core concepts deep dive: Pods, Services, Deployments
-- Kubernetes manifests en YAML configuratie
-- Service discovery en load balancing mechanismen
-- ConfigMaps en Secrets management
-- Namespaces en resource isolation
-- Labels, selectors en annotations
-- Three-tier application deployment (frontend, backend, database)
+- **Kubernetes Architectuur**: control plane, nodes, pods  
+- **Core Concepts Deep Dive**: Pods, Services, Deployments
+- **Kubernetes Manifests**: YAML configuratie en best practices
+- **Service Discovery**: load balancing mechanismen
+- **ConfigMaps en Secrets**: configuration management
+- **Namespaces**: resource isolation en multi-tenancy
+- **Labels & Selectors**: resource organization en targeting
+- **Three-tier Application**: frontend, backend, database deployment
+- **Local Development**: Minikube en Kind (Kubernetes in Docker)
+- **Development Workflows**: hot reloading en debugging
+- **Troubleshooting**: praktische debugging technieken
 
-**Les 8 – Kubernetes Local Development**
-
-- Minikube en lokale development clusters
-- Kind (Kubernetes in Docker) voor testing
-- Development workflows met Kubernetes
-- Hot reloading en development optimalisatie
-- Debugging en troubleshooting technieken
-- Praktische hands-on labs en development patterns
-
-**Les 9 – Helm Package Management**
+**Les 8 – Helm Package Management**
 
 - Kubernetes applicatie packaging en templating
 - Helm charts en custom chart development
@@ -102,7 +96,7 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
 - Helm repositories en chart distribution
 - Complex deployments met Helm dependency management
 
-**Les 10 – Ingress & Reverse Proxies**
+**Les 9 – Ingress & Reverse Proxies**
 
 - Traefik als modern reverse proxy
 - Ingress controllers en routing
@@ -110,7 +104,7 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
 - SSL/TLS certificate management met cert-manager
 - External DNS en domain management
 
-**Les 11 – Service Mesh & Microservices**
+**Les 10 – Service Mesh & Microservices**
 
 - Service mesh architectuur en use cases
 - Istio: traffic management, security, observability
@@ -119,7 +113,7 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
 - Circuit breakers en resilience patterns
 - Microservices observability en debugging
 
-**Les 12 – GitOps & Advanced CI/CD**
+**Les 11 – GitOps & Advanced CI/CD**
 
 - GitOps principes en workflow patterns
 - ArgoCD voor declaratieve deployments
@@ -128,7 +122,7 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
 - Multi-environment deployment strategieën
 - Canary deployments en blue-green patterns
 
-**Les 13 – Security & DevSecOps**
+**Les 12 – Security & DevSecOps**
 
 - Container security best practices
 - Image vulnerability scanning (Trivy, Snyk)
@@ -137,7 +131,7 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
 - Secrets management en encryption
 - Security monitoring en compliance automation
 
-**Les 14 – Advanced Monitoring & Observability**
+**Les 13 – Advanced Monitoring & Observability**
 
 - Observability: metrics, logs, distributed tracing
 - Prometheus voor metrics collection en alerting
@@ -146,7 +140,7 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
 - Application Performance Monitoring (APM)
 - SLA/SLO/SLI definitie en monitoring
 
-**Les 15 – Performance & Scalability**
+**Les 14 – Performance & Scalability**
 
 - Kubernetes auto-scaling: HPA, VPA, Cluster Autoscaler
 - Load testing strategieën (K6, Artillery)
