@@ -943,6 +943,8 @@ services:
 
 ![Service Communicatie](images/compose-service-communication.png)
 
+![Service Name Resolution Detail](images/compose-service-name-resolution.png)
+
 ### Praktische voorbeelden van service name resolution
 
 #### 1. **Backend praat met MongoDB:**
@@ -975,6 +977,287 @@ fetch(url)  // backend wordt automatisch geresolv'd naar IP
 // In browser JavaScript: gebruik host machine IP
 const url = "http://localhost:3000";  // Via port mapping
 fetch(url)
+```
+
+#### 3. **Praktische test van service name resolution**
+
+**Setup:**
+```bash
+# Start de compose stack
+docker compose -f 2-fe-be/compose.yml up -d
+
+# Test service resolution vanuit backend container
+docker compose exec backend nslookup mongodb
+# Output: Name: mongodb, Address: 172.20.0.3
+
+# Test HTTP communicatie tussen services
+docker compose exec backend curl http://frontend:80
+# Haalt de HTML pagina op van de frontend service
+```
+
+#### 4. **Database connecties via service namen**
+
+**PostgreSQL voorbeeld:**
+```yaml
+services:
+  app:
+    build: ./app
+    environment:
+      # Gebruik service naam in connection string
+      - DATABASE_URL=postgresql://user:pass@postgres:5432/mydb
+    depends_on:
+      - postgres
+      
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=mydb
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+```
+
+**Redis cache voorbeeld:**
+```yaml
+services:
+  webapp:
+    build: ./webapp
+    environment:
+      # Service naam voor Redis connectie
+      - REDIS_URL=redis://redis:6379
+      - SESSION_STORE=redis://redis:6379/1
+    depends_on:
+      - redis
+      
+  redis:
+    image: redis:alpine
+    # Geen ports mapping nodig voor interne communicatie
+```
+
+#### 5. **Microservices communicatie**
+
+**Multi-service API setup:**
+```yaml
+services:
+  api-gateway:
+    build: ./gateway
+    ports:
+      - "8080:80"
+    environment:
+      # Interne service URLs
+      - USER_SERVICE_URL=http://user-service:3000
+      - ORDER_SERVICE_URL=http://order-service:3001
+      - PAYMENT_SERVICE_URL=http://payment-service:3002
+      
+  user-service:
+    build: ./services/users
+    environment:
+      - DB_HOST=user-db
+      
+  order-service:
+    build: ./services/orders
+    environment:
+      - DB_HOST=order-db
+      - USER_SERVICE=http://user-service:3000
+      
+  payment-service:
+    build: ./services/payments
+    environment:
+      - ORDER_SERVICE=http://order-service:3001
+      
+  user-db:
+    image: postgres:13
+    
+  order-db:
+    image: postgres:13
+```
+
+**In API Gateway code:**
+```javascript
+// gateway/server.js
+const userServiceUrl = process.env.USER_SERVICE_URL;
+const orderServiceUrl = process.env.ORDER_SERVICE_URL;
+
+app.get('/users/:id', async (req, res) => {
+  // Service naam wordt automatisch resolved
+  const response = await fetch(`${userServiceUrl}/users/${req.params.id}`);
+  const user = await response.json();
+  res.json(user);
+});
+```
+
+#### 6. **Development vs Production service names**
+
+**Development (docker-compose.yml):**
+```yaml
+services:
+  app:
+    build: ./app
+    environment:
+      - API_URL=http://api:3000        # Interne service naam
+      - DB_HOST=database               # Interne service naam
+      
+  api:
+    build: ./api
+    
+  database:
+    image: postgres:13
+```
+
+**Production deployment overwegingen:**
+```yaml
+# Voor productie kun je service discovery tools gebruiken
+services:
+  app:
+    build: ./app
+    environment:
+      # Productie kan externe service discovery gebruiken
+      - API_URL=http://api.production.company.com
+      - DB_HOST=prod-database.amazonaws.com
+```
+
+#### 7. **Service name debugging**
+
+**Veelvoorkomende problemen en oplossingen:**
+
+```bash
+# Problem: Service not found
+docker compose exec app curl http://wrong-service-name:3000
+# curl: (6) Could not resolve host: wrong-service-name
+
+# Solution: Check service names in compose.yml
+docker compose config --services
+# Lists all service names
+
+# Problem: Connection refused
+docker compose exec app curl http://api:3000
+# curl: (7) Failed to connect to api port 3000: Connection refused
+
+# Debug steps:
+# 1. Check if service is running
+docker compose ps
+
+# 2. Check if service is listening on correct port
+docker compose exec api netstat -tuln
+
+# 3. Check if service is healthy
+docker compose exec api curl http://localhost:3000/health
+```
+
+**Network troubleshooting:**
+```bash
+# Test DNS resolution
+docker compose exec app nslookup api
+# Should return IP address of api service
+
+# Test network connectivity
+docker compose exec app ping api
+# Should get response from api container
+
+# Check service logs
+docker compose logs api
+# Look for startup errors or connection issues
+```
+
+#### 8. **Service aliases voor flexibiliteit**
+
+Soms wil je meerdere namen voor dezelfde service:
+
+```yaml
+services:
+  primary-database:
+    image: postgres:13
+    networks:
+      default:
+        aliases:
+          - db
+          - database
+          - postgres
+          - primary-db
+          
+  app:
+    build: ./app
+    environment:
+      # Alle aliases werken:
+      - DATABASE_URL=postgresql://user:pass@db:5432/mydb
+      # Of: DATABASE_URL=postgresql://user:pass@database:5432/mydb
+      # Of: DATABASE_URL=postgresql://user:pass@postgres:5432/mydb
+```
+
+#### 9. **Environment-specific service resolution**
+
+**Development override:**
+```yaml
+# docker-compose.override.yml (automatisch geladen in development)
+services:
+  app:
+    environment:
+      - API_URL=http://api:3000          # Local service
+      - DEBUG=true
+      
+  mock-service:
+    image: mockserver/mockserver
+    networks:
+      default:
+        aliases:
+          - external-api                 # Mock external API
+```
+
+**Production configuration:**
+```yaml
+# docker-compose.prod.yml
+services:
+  app:
+    environment:
+      - API_URL=https://api.production.com  # External production API
+      - DEBUG=false
+```
+
+#### 10. **Load balancing met service names**
+
+Wanneer je meerdere instances van een service hebt:
+
+```yaml
+services:
+  nginx:
+    image: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - app
+      
+  app:
+    build: ./app
+    # Geen ports mapping - alleen intern bereikbaar
+    
+# Start meerdere app instances
+```
+
+**Nginx configuratie:**
+```nginx
+# nginx.conf
+upstream app_servers {
+    server app_1:3000;
+    server app_2:3000;
+    server app_3:3000;
+}
+
+server {
+    listen 80;
+    
+    location / {
+        proxy_pass http://app_servers;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+**Start met schaling:**
+```bash
+# Start 3 instances van app service
+docker compose up --scale app=3 -d
+
+# Nginx zal automatisch load balancen tussen app_1, app_2, app_3
 ```
 
 ### Geavanceerde service name features
