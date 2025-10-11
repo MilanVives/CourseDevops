@@ -2,19 +2,26 @@
 
 ## Inleiding: Een praktische reis door containerisatie
 
-In dit hoofdstuk maken we een praktische reis van een eenvoudige HTML-pagina naar een volledige multi-container applicatie. We leren waarom Docker Compose ontstaan is en hoe het complexe deployments vereenvoudigt.
+In dit hoofdstuk maken we een praktische reis van een eenvoudige HTML-pagina naar een volledige multi-container applicatie. We beginnen met de eenvoudigste oplossing en ondervinden stap voor stap de beperkingen, waardoor we natuurlijk naar steeds geavanceerdere oplossingen toe groeien.
+
+**De reis die we gaan maken:**
+1. **Statische website** - Een eenvoudige HTML-pagina
+2. **Docker run** - Snel prototypen met volumes, maar niet distribueerbaar
+3. **Dockerfile** - Distribueerbare images maken, maar statische content
+4. **Handmatige orchestratie** - Meerdere containers handmatig beheren met Docker commando's
+5. **Docker Compose** - Alles geautomatiseerd in één configuratiebestand
 
 **Het probleem dat we gaan oplossen:**
-- We beginnen met een eenvoudige statische website
-- We leren deze te containeriseren met Docker
-- We ondervinden de beperkingen van handmatig container-management
-- We ontdekken Docker Compose als oplossing voor complex multi-service deployment
+- Hoe ga je van een eenvoudige website naar een productie-klare applicatie?
+- Waarom zijn handmatige Docker commando's onvoldoende voor echte projecten?
+- Hoe verhelpt Docker Compose de pijnpunten van multi-container deployment?
 
 **Wat je zult leren:**
-- Waarom Docker alleen niet voldoende is voor echte applicaties
-- Hoe Docker Compose ontstaan is als antwoord op deployment-complexiteit
-- Praktische ervaring met de evolutie van simpel naar complex
-- Best practices voor moderne container orchestratie
+- De evolutie van containerisatie: van simpel naar complex
+- Praktische ervaring met alle stappen van deze evolutie
+- Waarom elke stap noodzakelijk is maar ook zijn beperkingen heeft
+- Hoe Docker Compose de complexiteit wegneemt zonder functionaliteit te verliezen
+- Theoretische kennis over container networking, volumes en orchestratie
 
 ---
 
