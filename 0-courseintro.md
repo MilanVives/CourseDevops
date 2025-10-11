@@ -65,70 +65,95 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
 - Praktische cloud deployment (GCP/AWS/Azure)
 - Cost management en automated cleanup
 
-**Les 6 – Kubernetes Fundamentals**
+**Les 6 – Kubernetes Cloud Deployment (Easy Start)**
 
-- Container orchestratie op enterprise schaal
+- Waarom Kubernetes? Container orchestratie uitdagingen
+- Managed Kubernetes: Linode Kubernetes Engine (LKE) quick start
+- Cloud deployment: van Docker Compose naar Kubernetes
+- Basic deployment op managed cluster
+- LoadBalancer services en external access
+- Praktische eerste stappen met cloud Kubernetes
+
+**Les 7 – Kubernetes Fundamentals & Theory**
+
 - Kubernetes architectuur: control plane, nodes, pods
-- Core concepts: Pods, Services, Deployments
+- Core concepts deep dive: Pods, Services, Deployments
 - Kubernetes manifests en YAML configuratie
-- Service discovery en load balancing
+- Service discovery en load balancing mechanismen
 - ConfigMaps en Secrets management
-
-**Les 7 – Kubernetes Cloud Deployment**
-
-- Managed Kubernetes services (GKE, EKS, AKS)
-- Cloud-native deployment strategieën
-- Ingress controllers en external access
-- Persistent volumes in de cloud
-- Auto-scaling en resource management
+- Namespaces en resource isolation
+- Labels, selectors en annotations
+- Three-tier application deployment (frontend, backend, database)
 
 **Les 8 – Kubernetes Local Development**
 
 - Minikube en lokale development clusters
-- Kind (Kubernetes in Docker)
+- Kind (Kubernetes in Docker) voor testing
 - Development workflows met Kubernetes
-- Debugging en troubleshooting
-- Praktische hands-on labs
+- Hot reloading en development optimalisatie
+- Debugging en troubleshooting technieken
+- Praktische hands-on labs en development patterns
 
-**Les 9 – CI/CD Pipelines**
+**Les 9 – Helm Package Management**
 
-- Continuous Integration en Deployment
-- GitOps workflows en automation
-- Container-based CI/CD pipelines
-- Infrastructure as Code in CI/CD
-- Testing strategieën en deployment patterns
+- Kubernetes applicatie packaging en templating
+- Helm charts en custom chart development
+- Package management en versioning strategieën
+- Helm repositories en chart distribution
+- Complex deployments met Helm dependency management
 
-**Les 10 – Helm Package Management**
-
-- Kubernetes applicatie packaging
-- Helm charts en templating
-- Package management en versioning
-- Custom charts en repository management
-- Deployment automation met Helm
-
-**Les 11 – Ingress & Reverse Proxies**
+**Les 10 – Ingress & Reverse Proxies**
 
 - Traefik als modern reverse proxy
 - Ingress controllers en routing
 - Load balancing strategieën
-- SSL/TLS certificate management
-- Service mesh introductie
+- SSL/TLS certificate management met cert-manager
+- External DNS en domain management
 
-**Les 12 – Monitoring & Observability**
+**Les 11 – Service Mesh & Microservices**
 
-- Observability: metrics, logs, tracing
-- Prometheus voor metrics collection
-- Grafana voor visualization
-- Logging strategieën en log aggregation
-- Application performance monitoring
+- Service mesh architectuur en use cases
+- Istio: traffic management, security, observability
+- Linkerd als lightweight alternatief  
+- Service-to-service communication patronen
+- Circuit breakers en resilience patterns
+- Microservices observability en debugging
 
-**Les 13 – Advanced Cloud Native Topics**
+**Les 12 – GitOps & Advanced CI/CD**
 
-- CDN integratie (Cloudflare)
-- Security best practices en compliance
-- Performance optimization strategieën
-- Disaster recovery en backup strategieën
-- Future trends: serverless, edge computing
+- GitOps principes en workflow patterns
+- ArgoCD voor declaratieve deployments
+- Flux voor continuous delivery
+- Infrastructure as Code in CI/CD pipelines
+- Multi-environment deployment strategieën
+- Canary deployments en blue-green patterns
+
+**Les 13 – Security & DevSecOps**
+
+- Container security best practices
+- Image vulnerability scanning (Trivy, Snyk)
+- Kubernetes security: RBAC, PodSecurityPolicies
+- Policy as Code met Open Policy Agent (OPA)
+- Secrets management en encryption
+- Security monitoring en compliance automation
+
+**Les 14 – Advanced Monitoring & Observability**
+
+- Observability: metrics, logs, distributed tracing
+- Prometheus voor metrics collection en alerting
+- Grafana voor visualization en dashboards
+- Jaeger voor distributed tracing
+- Application Performance Monitoring (APM)
+- SLA/SLO/SLI definitie en monitoring
+
+**Les 15 – Performance & Scalability**
+
+- Kubernetes auto-scaling: HPA, VPA, Cluster Autoscaler
+- Load testing strategieën (K6, Artillery)
+- Performance optimization technieken
+- Resource management en capacity planning
+- Multi-cloud en hybrid cloud strategieën
+- Disaster recovery en business continuity planning
 
 ---
 
