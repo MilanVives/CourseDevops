@@ -5,14 +5,14 @@
 Stel je voor: je hebt een mooie website gebouwd en je wilt deze delen met de wereld. Je hebt geleerd hoe je Docker containers kunt draaien met volumes en poorten, maar er is een probleem...
 
 **Het scenario:**
-- Je hebt een eenvoudige HTML website in `3-compose-files/1-fe/index.html`
+- Je hebt een eenvoudige HTML website in `../3-Compose/compose-files/1-fe/index.html`
 - Je kunt deze lokaal draaien met `docker run` en volume mounting
 - Maar hoe deel je dit met je team? Met productie? Met klanten?
 
 **Het probleem:**
 ```bash
 # Dit werkt lokaal...
-docker run -p 8080:80 -v "$(pwd)/3-compose-files/1-fe/index.html:/usr/share/nginx/html/index.html:ro" nginx
+docker run -p 8080:80 -v "$(pwd)/../3-Compose/compose-files/1-fe/index.html:/usr/share/nginx/html/index.html:ro" nginx
 
 # Maar wat stuur je naar productie? Een ZIP bestand met instructies?
 # "Hallo, pak dit uit, installeer Docker, en run dit commando..."
@@ -35,7 +35,7 @@ docker run -p 8080:80 -v "$(pwd)/3-compose-files/1-fe/index.html:/usr/share/ngin
 Momenteel run je de website zo:
 
 ```bash
-cd 3-compose-files
+cd ../3-Compose/compose-files
 docker run --rm -p 8080:80 \
   -v "$(pwd)/1-fe/index.html:/usr/share/nginx/html/index.html:ro" \
   nginx:1.27-alpine
@@ -1505,7 +1505,7 @@ Met deze kennis kun je:
 - 🌍 **Schalen naar productie** met vertrouwen
 
 **Je bent nu klaar voor:**
-- Docker Compose orchestratie (zie `3-compose.md`)
+- Docker Compose orchestratie (zie `../3-Compose/compose.md`)
 - Kubernetes deployments
 - Container monitoring en logging
 - Service mesh architecturen

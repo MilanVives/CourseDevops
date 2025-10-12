@@ -128,7 +128,7 @@ Belangrijkste opties:
 - Bestanden in containers bestaan zolang de container leeft.  
 - Nieuwe container starten = schone slate (geen data van vorige container).  
 
-![Docker Volumes Overview](images/docker-volumes-overview.png)
+![Docker Volumes Overview](../images/docker-volumes-overview.png)
 
 ### Types volumes
 
@@ -169,9 +169,9 @@ Belangrijkste opties:
    - Delen van volumes tussen containers via `--volumes-from`.
    - Zeer krachtig voor data containers en backup strategieën.
 
-![Volumes-from Detailed](images/volumes-from-detailed.png)
+![Volumes-from Detailed](../images/volumes-from-detailed.png)
 
-![Volumes-from Expanded Examples](images/volumes-from-expanded.png)
+![Volumes-from Expanded Examples](../images/volumes-from-expanded.png)
 
 ### --volumes-from in detail
 

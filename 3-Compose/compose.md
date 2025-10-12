@@ -29,7 +29,7 @@ In dit hoofdstuk maken we een praktische reis van een eenvoudige HTML-pagina naa
 
 ### Het begin: Een simpele HTML-pagina
 
-In de map `3-compose-files/1-fe/` vinden we onze uitgangssituatie: een eenvoudige HTML-pagina met een hardgecodeerde lijst voedsel.
+In de map `compose-files/1-fe/` vinden we onze uitgangssituatie: een eenvoudige HTML-pagina met een hardgecodeerde lijst voedsel.
 
 ```html
 <!DOCTYPE html>
@@ -58,7 +58,7 @@ In de map `3-compose-files/1-fe/` vinden we onze uitgangssituatie: een eenvoudig
 Voor ontwikkeling kunnen we snel starten met de officiële `nginx`-image en onze HTML als volume mounten:
 
 ```bash
-cd 3-compose-files
+cd compose-files
 docker run \
   --rm \
   -p 8080:80 \
@@ -102,7 +102,7 @@ CMD ["nginx", "-g", "daemon off;"]
 
 ```bash
 # Navigeer naar de juiste directory
-cd 3-compose-files
+cd compose-files
 
 # Bouw de image
 docker build -t fe-static:latest ./1-fe
@@ -900,7 +900,7 @@ services:
 
 **Automatische service discovery in actie:**
 
-![Docker Compose Service DNS](images/compose-service-dns.png)
+![Docker Compose Service DNS](../images/compose-service-dns.png)
 
 #### Het probleem met IP-gebaseerde communicatie
 
@@ -941,9 +941,9 @@ services:
 3. Containers kunnen elkaar bereiken via servicenaam
 4. Docker regelt de IP resolutie automatisch
 
-![Service Communicatie](images/compose-service-communication.png)
+![Service Communicatie](../images/compose-service-communication.png)
 
-![Service Name Resolution Detail](images/compose-service-name-resolution.png)
+![Service Name Resolution Detail](../images/compose-service-name-resolution.png)
 
 ### Praktische voorbeelden van service name resolution
 
@@ -1630,7 +1630,7 @@ docker compose exec app netstat -tuln
 
 **Stap 1: Navigeer naar de juiste directory**
 ```bash
-cd 3-compose-files
+cd compose-files
 ```
 
 **Stap 2: Start alle services**
