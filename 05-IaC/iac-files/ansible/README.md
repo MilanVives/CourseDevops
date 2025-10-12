@@ -45,7 +45,7 @@ This folder contains Ansible configuration and playbooks for automating tasks on
 
 ## Inventory Example
 
-See [`hosts`](ansible/hosts) for an example inventory file. Update it with your server IPs and credentials.
+See [`hosts`](hosts) for an example inventory file. Update it with your server IPs and credentials.
 
 ## Notes
 

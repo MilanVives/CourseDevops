@@ -17,10 +17,10 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
 
 # Inhoudstafel
 
-## [Les 1 – Docker Basics](1-Docker/)
+## [Les 1 – Docker Basics](01-Docker/)
 
-- [Docker Fundamentals](1-Docker/docker.md) - Introductie & Motivatie, Wat is Docker?, Containers vs VMs
-- [Praktische Oefeningen](1-Docker/oefeningen.md) - Hands-on labs en experimenteren
+- [Docker Fundamentals](01-Docker/docker.md) - Introductie & Motivatie, Wat is Docker?, Containers vs VMs
+- [Praktische Oefeningen](01-Docker/oefeningen.md) - Hands-on labs en experimenteren
 - **Onderwerpen:**
   - Belangrijkste Docker commando's (`docker run`, `docker ps`, `docker stop`, `docker rm`)
   - Opties: `--rm`, `--name`, `-d`, `-p`, `-v`
@@ -30,9 +30,9 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
   - Eigen images maken met `docker commit`
   - Publiceren naar Docker Hub
 
-## [Les 2 – Dockerfile](2-Dockerfile/)
+## [Les 2 – Dockerfile](02-Dockerfile/)
 
-- [Dockerfile Tutorial](2-Dockerfile/Dockerfile-Intro.md) - Van Docker run naar distribueerbare images
+- [Dockerfile Tutorial](02-Dockerfile/Dockerfile-Intro.md) - Van Docker run naar distribueerbare images
 - **Onderwerpen:**
   - Images bouwen met Dockerfile
   - Docker layer systeem en caching
@@ -40,10 +40,10 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
   - Multi-stage builds en optimization
   - Van handmatige containers naar scripted builds
 
-## [Les 3 – Docker Compose](3-Compose/)
+## [Les 3 – Docker Compose](03-Compose/)
 
-- [Van Docker run naar Compose](3-Compose/compose.md) - Multi-container orchestratie
-- [Compose bestanden](3-Compose/compose-files/) - Praktische voorbeelden
+- [Van Docker run naar Compose](03-Compose/compose.md) - Multi-container orchestratie
+- [Compose bestanden](03-Compose/compose-files/) - Praktische voorbeelden
 - **Onderwerpen:**
   - Multi-container applicaties
   - YAML configuratie en service definitie
@@ -51,9 +51,9 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
   - Volumes en networking in Compose
   - Van handmatige linking naar geautomatiseerde orchestratie
 
-## [Les 4 – Docker Networking](4-Docker-networking/)
+## [Les 4 – Docker Networking](04-Docker-networking/)
 
-- [Docker Networking Tutorial](4-Docker-networking/docker-networking.md) - Complete netwerkgids
+- [Docker Networking Tutorial](04-Docker-networking/docker-networking.md) - Complete netwerkgids
 - **Onderwerpen:**
   - Netwerkmodi: bridge, host, overlay, none
   - Container-naar-container communicatie
@@ -62,10 +62,10 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
   - Externe toegang en poort forwarding
   - Praktische voorbeelden met netcat
 
-## [Les 5 – Infrastructure as Code (IaC)](5-IaC/)
+## [Les 5 – Infrastructure as Code (IaC)](05-IaC/)
 
-- [IaC Tutorial](5-IaC/iac.md) - Ansible en Terraform mastery
-- [IaC bestanden](5-IaC/iac-files/) - Praktische voorbeelden en templates
+- [IaC Tutorial](05-IaC/iac.md) - Ansible en Terraform mastery
+- [IaC bestanden](05-IaC/iac-files/) - Praktische voorbeelden en templates
 - **Onderwerpen:**
   - Van handmatige naar geautomatiseerde infrastructuur
   - **Ansible**: Configuration Management, Playbooks, inventory, modules en roles
@@ -75,16 +75,16 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
   - Tool integratie: Terraform + Ansible workflows
   - Praktische cloud deployment (GCP/AWS/Azure)
 
-## [Les 6 – Kubernetes](6-Kubernetes/)
+## [Les 6 – Kubernetes](06-Kubernetes/)
 
-### [Les 6a – Kubernetes Cloud Deployment (Easy Start)](6-Kubernetes/kubernetes-cloud-start.md)
+### [Les 6a – Kubernetes Cloud Deployment (Easy Start)](06-Kubernetes/kubernetes-cloud-start.md)
 - Waarom Kubernetes? Container orchestratie uitdagingen
 - Managed Kubernetes: Linode Kubernetes Engine (LKE) quick start
 - Cloud deployment: van Docker Compose naar Kubernetes
 - Basic deployment op managed cluster
 - LoadBalancer services en external access
 
-### [Les 6b – Kubernetes Fundamentals & Local Development](6-Kubernetes/kubernetes-fundamentals.md)
+### [Les 6b – Kubernetes Fundamentals & Local Development](06-Kubernetes/kubernetes-fundamentals.md)
 - **Kubernetes Architectuur**: control plane, nodes, pods  
 - **Core Concepts Deep Dive**: Pods, Services, Deployments
 - **Kubernetes Manifests**: YAML configuratie en best practices
@@ -97,9 +97,9 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
 - **Development Workflows**: hot reloading en debugging
 - **Troubleshooting**: praktische debugging technieken
 
-## [Les 7 – Helm Package Management](7-Helm/)
+## [Les 7 – Helm Package Management](07-Helm/)
 
-- [Helm Tutorial](7-Helm/helm.md) - Kubernetes package management
+- [Helm Tutorial](07-Helm/helm.md) - Kubernetes package management
 - **Onderwerpen:**
   - Kubernetes applicatie packaging en templating
   - Helm charts en custom chart development
@@ -107,9 +107,9 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
   - Helm repositories en chart distribution
   - Complex deployments met Helm dependency management
 
-## [Les 8 – Ingress & Reverse Proxies](8-Ingress-and-Reverse-Proxies/)
+## [Les 8 – Ingress & Reverse Proxies](08-Ingress-and-Reverse-Proxies/)
 
-- [Ingress en Traefik](8-Ingress-and-Reverse-Proxies/ingress.md) - Modern reverse proxy
+- [Ingress en Traefik](08-Ingress-and-Reverse-Proxies/ingress.md) - Modern reverse proxy
 - **Onderwerpen:**
   - Traefik als modern reverse proxy
   - Ingress controllers en routing
@@ -117,7 +117,7 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
   - SSL/TLS certificate management met cert-manager
   - External DNS en domain management
 
-## [Les 9 – CI/CD](9-CI-CD/) *[Komt binnenkort]*
+## [Les 9 – CI/CD](09-CI-CD/) *[Komt binnenkort]*
 
 - **Onderwerpen:**
   - GitOps principes en workflow patterns
