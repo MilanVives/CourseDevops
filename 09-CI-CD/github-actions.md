@@ -54,48 +54,50 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Run tests
-      run: echo "Running tests..."
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run tests
+        run: echo "Running tests..."
 ```
 
 ### Belangrijke Concepten
 
 #### Triggers (`on`)
+
 ```yaml
 on:
-  push:                    # Bij elke push
-  pull_request:           # Bij PR's
-  schedule:               # Geplande runs
-    - cron: '0 2 * * *'   # Elke dag om 2:00
-  workflow_dispatch:      # Handmatige trigger
+  push: # Bij elke push
+  pull_request: # Bij PR's
+  schedule: # Geplande runs
+    - cron: "0 2 * * *" # Elke dag om 2:00
+  workflow_dispatch: # Handmatige trigger
 ```
 
 #### Jobs en Steps
+
 ```yaml
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - run: npm test
-  
+      - uses: actions/checkout@v4
+      - run: npm test
+
   deploy:
-    needs: test            # Wacht op test job
+    needs: test # Wacht op test job
     runs-on: ubuntu-latest
     steps:
-    - run: echo "Deploying..."
+      - run: echo "Deploying..."
 ```
 
 ---
@@ -141,34 +143,34 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Login to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_HUB_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-    
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./Dockerfile
-        push: true
-        tags: |
-          ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:latest
-          ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:latest
+            ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
 ```
 
 ### Multi-platform Builds
@@ -230,20 +232,20 @@ deploy-to-production:
   needs: build-and-push
   runs-on: ubuntu-latest
   if: github.ref == 'refs/heads/main'
-  
+
   steps:
-  - name: Deploy to server
-    uses: appleboy/ssh-action@v1.0.0
-    with:
-      host: ${{ secrets.SERVER_HOST }}
-      username: ${{ secrets.SERVER_USER }}
-      key: ${{ secrets.SSH_PRIVATE_KEY }}
-      script: |
-        docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:latest
-        docker stop myapp || true
-        docker rm myapp || true
-        docker run -d --name myapp -p 80:3000 \
-          ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:latest
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:latest
+          docker stop myapp || true
+          docker rm myapp || true
+          docker run -d --name myapp -p 80:3000 \
+            ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:latest
 ```
 
 ---
@@ -258,22 +260,22 @@ Voor applicaties met meerdere services:
 deploy-compose:
   needs: build-and-push
   runs-on: ubuntu-latest
-  
+
   steps:
-  - name: Checkout code
-    uses: actions/checkout@v4
-  
-  - name: Deploy with Docker Compose
-    uses: appleboy/ssh-action@v1.0.0
-    with:
-      host: ${{ secrets.SERVER_HOST }}
-      username: ${{ secrets.SERVER_USER }}
-      key: ${{ secrets.SSH_PRIVATE_KEY }}
-      script: |
-        cd /opt/myapp
-        git pull origin main
-        docker-compose pull
-        docker-compose up -d --force-recreate
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy with Docker Compose
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd /opt/myapp
+          git pull origin main
+          docker-compose pull
+          docker-compose up -d --force-recreate
 ```
 
 ### Environment-specific Deployments
@@ -283,27 +285,27 @@ deploy-to-staging:
   needs: build-and-push
   runs-on: ubuntu-latest
   environment: staging
-  
+
   steps:
-  - name: Deploy to staging
-    uses: appleboy/ssh-action@v1.0.0
-    with:
-      host: ${{ secrets.STAGING_HOST }}
-      username: ${{ secrets.STAGING_USER }}
-      key: ${{ secrets.SSH_PRIVATE_KEY }}
-      script: |
-        cd /opt/myapp-staging
-        docker-compose -f docker-compose.staging.yml pull
-        docker-compose -f docker-compose.staging.yml up -d
+    - name: Deploy to staging
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.STAGING_HOST }}
+        username: ${{ secrets.STAGING_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd /opt/myapp-staging
+          docker-compose -f docker-compose.staging.yml pull
+          docker-compose -f docker-compose.staging.yml up -d
 
 deploy-to-production:
   needs: [build-and-push, deploy-to-staging]
   runs-on: ubuntu-latest
   environment: production
-  
+
   steps:
-  - name: Deploy to production
-    # ... productie deployment
+    - name: Deploy to production
+      # ... productie deployment
 ```
 
 ---
@@ -316,27 +318,27 @@ deploy-to-production:
 deploy-to-k8s:
   needs: build-and-push
   runs-on: ubuntu-latest
-  
+
   steps:
-  - name: Checkout code
-    uses: actions/checkout@v4
-  
-  - name: Configure kubectl
-    uses: azure/k8s-set-context@v3
-    with:
-      method: kubeconfig
-      kubeconfig: ${{ secrets.KUBE_CONFIG }}
-  
-  - name: Deploy to Kubernetes
-    run: |
-      # Update image tag in deployment
-      sed -i "s|image: myapp:.*|image: ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}|" k8s/deployment.yaml
-      
-      # Apply manifests
-      kubectl apply -f k8s/
-      
-      # Wait for rollout
-      kubectl rollout status deployment/myapp
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure kubectl
+      uses: azure/k8s-set-context@v3
+      with:
+        method: kubeconfig
+        kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+    - name: Deploy to Kubernetes
+      run: |
+        # Update image tag in deployment
+        sed -i "s|image: myapp:.*|image: ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}|" k8s/deployment.yaml
+
+        # Apply manifests
+        kubectl apply -f k8s/
+
+        # Wait for rollout
+        kubectl rollout status deployment/myapp
 ```
 
 ### Helm Deployment
@@ -345,30 +347,30 @@ deploy-to-k8s:
 deploy-with-helm:
   needs: build-and-push
   runs-on: ubuntu-latest
-  
+
   steps:
-  - name: Checkout code
-    uses: actions/checkout@v4
-  
-  - name: Configure kubectl
-    uses: azure/k8s-set-context@v3
-    with:
-      method: kubeconfig
-      kubeconfig: ${{ secrets.KUBE_CONFIG }}
-  
-  - name: Install Helm
-    uses: azure/setup-helm@v3
-    with:
-      version: 'v3.12.0'
-  
-  - name: Deploy with Helm
-    run: |
-      helm upgrade --install myapp ./helm-chart \
-        --set image.repository=${{ secrets.DOCKER_HUB_USERNAME }}/myapp \
-        --set image.tag=${{ github.sha }} \
-        --namespace production \
-        --create-namespace \
-        --wait
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure kubectl
+      uses: azure/k8s-set-context@v3
+      with:
+        method: kubeconfig
+        kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+    - name: Install Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: "v3.12.0"
+
+    - name: Deploy with Helm
+      run: |
+        helm upgrade --install myapp ./helm-chart \
+          --set image.repository=${{ secrets.DOCKER_HUB_USERNAME }}/myapp \
+          --set image.tag=${{ github.sha }} \
+          --namespace production \
+          --create-namespace \
+          --wait
 ```
 
 ### ArgoCD GitOps
@@ -379,25 +381,25 @@ Voor GitOps workflows met ArgoCD:
 update-gitops-repo:
   needs: build-and-push
   runs-on: ubuntu-latest
-  
+
   steps:
-  - name: Checkout GitOps repo
-    uses: actions/checkout@v4
-    with:
-      repository: myorg/gitops-repo
-      token: ${{ secrets.GITOPS_TOKEN }}
-  
-  - name: Update image tag
-    run: |
-      # Update Helm values file
-      sed -i "s|tag: .*|tag: ${{ github.sha }}|" environments/production/values.yaml
-      
-      # Commit and push
-      git config user.name "GitHub Actions"
-      git config user.email "actions@github.com"
-      git add .
-      git commit -m "Update image tag to ${{ github.sha }}"
-      git push
+    - name: Checkout GitOps repo
+      uses: actions/checkout@v4
+      with:
+        repository: myorg/gitops-repo
+        token: ${{ secrets.GITOPS_TOKEN }}
+
+    - name: Update image tag
+      run: |
+        # Update Helm values file
+        sed -i "s|tag: .*|tag: ${{ github.sha }}|" environments/production/values.yaml
+
+        # Commit and push
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add .
+        git commit -m "Update image tag to ${{ github.sha }}"
+        git push
 ```
 
 ---
@@ -411,78 +413,78 @@ name: Complete CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Run tests
-      run: |
-        npm install
-        npm test
-        npm run lint
+      - uses: actions/checkout@v4
+      - name: Run tests
+        run: |
+          npm install
+          npm test
+          npm run lint
 
   build:
     needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-    
+
     outputs:
       image-tag: ${{ steps.meta.outputs.tags }}
-    
+
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Login to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_HUB_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-    
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ secrets.DOCKER_HUB_USERNAME }}/myapp
-        tags: |
-          type=ref,event=branch
-          type=sha
-          type=raw,value=latest,enable={{is_default_branch}}
-    
-    - name: Build and push
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKER_HUB_USERNAME }}/myapp
+          tags: |
+            type=ref,event=branch
+            type=sha
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy-staging:
     needs: build
     if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     environment: staging
-    
+
     steps:
-    - name: Deploy to staging
-      # ... staging deployment
+      - name: Deploy to staging
+        # ... staging deployment
 
   deploy-production:
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
-    
+
     steps:
-    - name: Deploy to production
-      # ... production deployment
+      - name: Deploy to production
+        # ... production deployment
 ```
 
 ### Security Scanning
@@ -491,19 +493,19 @@ jobs:
 security-scan:
   runs-on: ubuntu-latest
   steps:
-  - uses: actions/checkout@v4
-  
-  - name: Run Trivy vulnerability scanner
-    uses: aquasecurity/trivy-action@master
-    with:
-      image-ref: ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
-      format: 'sarif'
-      output: 'trivy-results.sarif'
-  
-  - name: Upload Trivy scan results
-    uses: github/codeql-action/upload-sarif@v2
-    with:
-      sarif_file: 'trivy-results.sarif'
+    - uses: actions/checkout@v4
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
+        format: "sarif"
+        output: "trivy-results.sarif"
+
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: "trivy-results.sarif"
 ```
 
 ### Matrix Builds
@@ -515,14 +517,14 @@ test-matrix:
     matrix:
       node-version: [16, 18, 20]
       os: [ubuntu-latest, windows-latest, macos-latest]
-  
+
   steps:
-  - uses: actions/checkout@v4
-  - name: Setup Node.js ${{ matrix.node-version }}
-    uses: actions/setup-node@v4
-    with:
-      node-version: ${{ matrix.node-version }}
-  - run: npm test
+    - uses: actions/checkout@v4
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm test
 ```
 
 ---
@@ -579,7 +581,7 @@ test-matrix:
   uses: 8398a7/action-slack@v3
   with:
     status: failure
-    channel: '#deployments'
+    channel: "#deployments"
   env:
     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 ```
@@ -615,12 +617,12 @@ name: Node.js CI/CD
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: "18"
   REGISTRY: docker.io
   IMAGE_NAME: myusername/myapp
 
@@ -628,111 +630,111 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Run tests
-      run: |
-        npm run test:unit
-        npm run test:integration
-    
-    - name: Upload coverage
-      uses: codecov/codecov-action@v3
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: |
+          npm run test:unit
+          npm run test:integration
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
 
   build-and-push:
     needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Login to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ secrets.DOCKER_HUB_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-    
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        tags: |
-          type=ref,event=branch
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
-    
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        platforms: linux/amd64,linux/arm64
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy-staging:
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop'
     environment: staging
-    
+
     steps:
-    - name: Deploy to staging
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.STAGING_HOST }}
-        username: ${{ secrets.STAGING_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop-${{ github.sha }}
-          docker stop myapp-staging || true
-          docker rm myapp-staging || true
-          docker run -d --name myapp-staging \
-            -p 3001:3000 \
-            -e NODE_ENV=staging \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop-${{ github.sha }}
+      - name: Deploy to staging
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop-${{ github.sha }}
+            docker stop myapp-staging || true
+            docker rm myapp-staging || true
+            docker run -d --name myapp-staging \
+              -p 3001:3000 \
+              -e NODE_ENV=staging \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop-${{ github.sha }}
 
   deploy-production:
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment: production
-    
+
     steps:
-    - name: Deploy to production
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.PRODUCTION_HOST }}
-        username: ${{ secrets.PRODUCTION_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          docker stop myapp || true
-          docker rm myapp || true
-          docker run -d --name myapp \
-            -p 80:3000 \
-            -e NODE_ENV=production \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          
-          # Health check
-          sleep 10
-          curl -f http://localhost/health || exit 1
+      - name: Deploy to production
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            docker stop myapp || true
+            docker rm myapp || true
+            docker run -d --name myapp \
+              -p 80:3000 \
+              -e NODE_ENV=production \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+            # Health check
+            sleep 10
+            curl -f http://localhost/health || exit 1
 ```
 
 Deze tutorial biedt een complete gids voor het opzetten van professionele CI/CD pipelines met GitHub Actions, van eenvoudige builds tot complexe multi-environment deployments met Kubernetes en Helm.
