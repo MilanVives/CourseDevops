@@ -117,7 +117,7 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
   - SSL/TLS certificate management met cert-manager
   - External DNS en domain management
 
-## [Les 9 – CI/CD](9-CI-CD/)
+## [Les 9 – CI/CD](9-CI-CD/) *[Komt binnenkort]*
 
 - **Onderwerpen:**
   - GitOps principes en workflow patterns
@@ -138,7 +138,7 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
   - Circuit breakers en resilience patterns
   - Microservices observability en debugging
 
-## [Les 11 – Security & DevSecOps](11-Security-and-Devops/)
+## [Les 11 – Security & DevSecOps](11-Security-and-Devops/) *[Komt binnenkort]*
 
 - **Onderwerpen:**
   - Container security best practices
@@ -148,7 +148,7 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
   - Secrets management en encryption
   - Security monitoring en compliance automation
 
-## [Les 12 – Advanced Monitoring & Observability](12-Monitoring/)
+## [Les 12 – Advanced Monitoring & Observability](12-Monitoring/) *[Komt binnenkort]*
 
 - **Onderwerpen:**
   - Observability: metrics, logs, distributed tracing
@@ -158,7 +158,7 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
   - Application Performance Monitoring (APM)
   - SLA/SLO/SLI definitie en monitoring
 
-## [Les 13 – Performance & Scalability](13-Scalability/)
+## [Les 13 – Performance & Scalability](13-Scalability/) *[Komt binnenkort]*
 
 - **Onderwerpen:**
   - Kubernetes auto-scaling: HPA, VPA, Cluster Autoscaler
