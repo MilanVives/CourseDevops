@@ -109,13 +109,17 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
 
 ## [Les 8 – Ingress & Reverse Proxies](08-Ingress-and-Reverse-Proxies/)
 
-- [Ingress en Traefik](08-Ingress-and-Reverse-Proxies/ingress.md) - Modern reverse proxy
+- [Ingress Controllers](08-Ingress-and-Reverse-Proxies/ingress.md) - Kubernetes ingress fundamentals
+- [Traefik Tutorial](08-Ingress-and-Reverse-Proxies/Traefik.md) - Modern reverse proxy met SSL
+- [Nginx Tutorial](08-Ingress-and-Reverse-Proxies/Nginx.md) - Klassieke reverse proxy setup
 - **Onderwerpen:**
-  - Traefik als modern reverse proxy
   - Ingress controllers en routing
+  - Traefik als modern reverse proxy met automatische SSL certificates
+  - Nginx reverse proxy configuratie met port redirection
   - Load balancing strategieën
-  - SSL/TLS certificate management met cert-manager
+  - SSL/TLS certificate management (Let's Encrypt, manual certificates)
   - External DNS en domain management
+  - Container-naar-container proxy routing
 
 ## [Les 9 – CI/CD](09-CI-CD/) *[Komt binnenkort]*
 
