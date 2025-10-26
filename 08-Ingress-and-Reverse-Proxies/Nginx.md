@@ -38,39 +38,85 @@ docker exec webapp2 sh -c 'echo "<h1>Web App 2</h1><p>Running on port 8082</p>" 
 Maak een nginx configuratie bestand:
 
 ```nginx
-# nginx.conf
+# nginx.conf - Hoofdconfiguratie bestand (bestandsnaam kun je zelf kiezen)
+
+# EVENTS BLOK - Verplicht hoofdblok voor worker proces configuratie
 events {
+    # worker_connections: Configureerbare waarde (512-4096 zijn gebruikelijke waardes)
+    # Bepaalt max aantal gelijktijdige connecties per worker proces
     worker_connections 1024;
 }
 
+# HTTP BLOK - Verplicht hoofdblok voor alle HTTP gerelateerde configuratie
 http {
+    # UPSTREAM BLOK - Optioneel blok om groepen van backend servers te definiëren
+    # "webapp1" is een zelfgekozen naam die je later kunt gebruiken in proxy_pass
     upstream webapp1 {
+        # server: Verplichte directive binnen upstream blok
+        # host.docker.internal: Docker's speciale hostname voor toegang tot host machine (vaste naam)
+        # :8081: Configureerbare poortnummer waar je backend service draait
         server host.docker.internal:8081;
     }
     
+    # Tweede upstream groep met zelfgekozen naam "webapp2"
     upstream webapp2 {
+        # Andere configureerbare poort voor tweede service
         server host.docker.internal:8082;
     }
     
+    # SERVER BLOK - Definieert een virtuele server (vergelijkbaar met virtual host)
     server {
+        # listen: Verplichte directive - poort waarop nginx luistert
+        # 80: Configureerbare poort (standaard HTTP poort, kan elke vrije poort zijn)
         listen 80;
+        
+        # server_name: Verplichte directive voor host-based routing
+        # app1.localhost: Zelfgekozen domeinnaam waarop deze server reageert
+        # Kan elk domein zijn (app1.example.com, mijnapp.nl, etc.)
         server_name app1.localhost;
         
+        # LOCATION BLOK - Definieert hoe verschillende URL paths worden afgehandeld
+        # "/" is een pad matcher - betekent alle requests die beginnen met /
+        # Je kunt ook specifieke paden gebruiken zoals /api/, /admin/, etc.
         location / {
+            # proxy_pass: Verplichte directive voor reverse proxy functionaliteit
+            # http://webapp1: Verwijst naar de upstream groep "webapp1" die hierboven gedefinieerd is
+            # "http://" protocol prefix is verplicht
             proxy_pass http://webapp1;
+            
+            # proxy_set_header: Optionele directives om headers door te geven aan backend
+            # Host: Vaste header naam (HTTP standaard)
+            # $host: Nginx ingebouwde variabele met de server_name waarde
             proxy_set_header Host $host;
+            
+            # X-Real-IP: Zelfgekozen header naam (conventie voor client IP)
+            # $remote_addr: Nginx ingebouwde variabele met het echte client IP adres
             proxy_set_header X-Real-IP $remote_addr;
+            
+            # X-Forwarded-For: Standaard header naam voor proxy chains
+            # $proxy_add_x_forwarded_for: Nginx ingebouwde variabele die IP chain bijhoudt
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            
+            # X-Forwarded-Proto: Standaard header naam voor protocol info
+            # $scheme: Nginx ingebouwde variabele (http of https)
             proxy_set_header X-Forwarded-Proto $scheme;
         }
     }
     
+    # Tweede SERVER BLOK voor verschillende applicatie
     server {
+        # Zelfde poort als eerste server - onderscheid gebeurt via server_name
         listen 80;
+        
+        # Andere zelfgekozen domeinnaam voor routing naar tweede applicatie
         server_name app2.localhost;
         
+        # Zelfde location configuratie maar dan naar andere upstream
         location / {
+            # Verwijst naar upstream groep "webapp2"
             proxy_pass http://webapp2;
+            
+            # Identieke header configuratie (standaard best practice)
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
