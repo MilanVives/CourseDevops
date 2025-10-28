@@ -33,12 +33,16 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
 ## [Les 2 – Dockerfile](02-Dockerfile/)
 
 - [Dockerfile Tutorial](02-Dockerfile/Dockerfile-Intro.md) - Van Docker run naar distribueerbare images
+- [Dockerfile Advanced](02-Dockerfile/Dockerfile-Advanced.md) - Geavanceerde Dockerfile technieken en optimalisaties
 - **Onderwerpen:**
   - Images bouwen met Dockerfile
   - Docker layer systeem en caching
   - Dockerfile keywords en best practices
   - Multi-stage builds en optimization
   - Van handmatige containers naar scripted builds
+  - Geavanceerde Dockerfile instructies en optimalisatie technieken
+  - Security best practices en image hardening
+  - Build context optimalisatie en .dockerignore
 
 ## [Les 3 – Docker Compose](03-Compose/)
 
