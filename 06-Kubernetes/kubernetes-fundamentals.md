@@ -5,6 +5,7 @@
 ### Control Plane (Master Nodes)
 
 #### **API Server (kube-apiserver)**
+
 ```
 ┌─────────────────┐
 │   kubectl       │ ──┐
@@ -21,13 +22,16 @@
 └─────────────────────────────────────┘
 ```
 
+![The K8s API Server](../images/k8s-api-server.gif)
 **Functionaliteiten:**
+
 - 🔐 **Authentication**: Wie mag toegang?
 - 🛡️ **Authorization**: Wat mag je doen?
 - ✅ **Validation**: Is de request geldig?
 - 💾 **Persistence**: Schrijf naar etcd
 
 #### **etcd - Cluster Database**
+
 ```
 ┌─────────────────────────────────────┐
 │               etcd                  │
@@ -39,12 +43,14 @@
 ```
 
 **Wat wordt opgeslagen:**
+
 - Cluster configuratie en status
 - Alle Kubernetes objecten (pods, services, etc.)
 - Network policies en security policies
 - Secrets en configuration data
 
 #### **Scheduler (kube-scheduler)**
+
 ```
 ┌─────────────────────────────────────┐
 │            Scheduler                │
@@ -64,6 +70,7 @@
 ```
 
 #### **Controller Manager (kube-controller-manager)**
+
 ```
 ┌─────────────────────────────────────┐
 │        Controller Manager           │
@@ -80,6 +87,7 @@
 ### Worker Nodes (Data Plane)
 
 #### **kubelet - Node Agent**
+
 ```
 ┌─────────────────────────────────────┐
 │              kubelet                │
@@ -99,6 +107,7 @@
 ```
 
 #### **kube-proxy - Network Proxy**
+
 ```
 ┌─────────────────────────────────────┐
 │            kube-proxy               │
@@ -116,6 +125,7 @@
 ### Pods - Smallest Deployable Unit
 
 #### **Pod Anatomie**
+
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -128,52 +138,53 @@ metadata:
     description: "Simple nginx web server"
 spec:
   containers:
-  - name: nginx
-    image: nginx:1.21
-    ports:
-    - containerPort: 80
-      name: http
-    resources:
-      requests:
-        memory: "64Mi"
-        cpu: "250m"
-      limits:
-        memory: "128Mi"
-        cpu: "500m"
-    env:
-    - name: ENV
-      value: "production"
-    - name: DATABASE_URL
-      valueFrom:
-        secretKeyRef:
-          name: app-secrets
-          key: database-url
-    volumeMounts:
-    - name: config-volume
-      mountPath: /etc/nginx/nginx.conf
-      subPath: nginx.conf
-    livenessProbe:
-      httpGet:
-        path: /
-        port: 80
-      initialDelaySeconds: 30
-      periodSeconds: 10
-    readinessProbe:
-      httpGet:
-        path: /
-        port: 80
-      initialDelaySeconds: 5
-      periodSeconds: 5
+    - name: nginx
+      image: nginx:1.21
+      ports:
+        - containerPort: 80
+          name: http
+      resources:
+        requests:
+          memory: "64Mi"
+          cpu: "250m"
+        limits:
+          memory: "128Mi"
+          cpu: "500m"
+      env:
+        - name: ENV
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: database-url
+      volumeMounts:
+        - name: config-volume
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+      livenessProbe:
+        httpGet:
+          path: /
+          port: 80
+        initialDelaySeconds: 30
+        periodSeconds: 10
+      readinessProbe:
+        httpGet:
+          path: /
+          port: 80
+        initialDelaySeconds: 5
+        periodSeconds: 5
   volumes:
-  - name: config-volume
-    configMap:
-      name: nginx-config
+    - name: config-volume
+      configMap:
+        name: nginx-config
   restartPolicy: Always
   nodeSelector:
     disktype: ssd
 ```
 
 #### **Multi-Container Pod Example**
+
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -189,7 +200,7 @@ spec:
     volumeMounts:
     - name: shared-data
       mountPath: /usr/share/nginx/html
-  
+
   # Sidecar container for log processing
   - name: log-processor
     image: busybox
@@ -202,7 +213,7 @@ spec:
     volumeMounts:
     - name: shared-data
       mountPath: /shared
-  
+
   # Init container for setup
   initContainers:
   - name: init-setup
@@ -213,7 +224,7 @@ spec:
     volumeMounts:
     - name: shared-data
       mountPath: /shared
-  
+
   volumes:
   - name: shared-data
     emptyDir: {}
@@ -222,22 +233,24 @@ spec:
 ### Services - Network Abstraction
 
 #### **ClusterIP Service (Default)**
+
 ```yaml
 apiVersion: v1
 kind: Service
 metadata:
   name: nginx-clusterip
 spec:
-  type: ClusterIP  # Internal cluster access only
+  type: ClusterIP # Internal cluster access only
   ports:
-  - port: 80        # Service port
-    targetPort: 80  # Container port
-    protocol: TCP
+    - port: 80 # Service port
+      targetPort: 80 # Container port
+      protocol: TCP
   selector:
     app: nginx
 ```
 
 #### **NodePort Service**
+
 ```yaml
 apiVersion: v1
 kind: Service
@@ -246,14 +259,15 @@ metadata:
 spec:
   type: NodePort
   ports:
-  - port: 80
-    targetPort: 80
-    nodePort: 30080  # External access via <NodeIP>:30080
+    - port: 80
+      targetPort: 80
+      nodePort: 30080 # External access via <NodeIP>:30080
   selector:
     app: nginx
 ```
 
 #### **LoadBalancer Service**
+
 ```yaml
 apiVersion: v1
 kind: Service
@@ -262,23 +276,24 @@ metadata:
 spec:
   type: LoadBalancer
   ports:
-  - port: 80
-    targetPort: 80
+    - port: 80
+      targetPort: 80
   selector:
     app: nginx
   # Cloud provider will provision external load balancer
 ```
 
 #### **Headless Service**
+
 ```yaml
 apiVersion: v1
 kind: Service
 metadata:
   name: nginx-headless
 spec:
-  clusterIP: None  # No cluster IP assigned
+  clusterIP: None # No cluster IP assigned
   ports:
-  - port: 80
+    - port: 80
   selector:
     app: nginx
 # Returns individual Pod IPs instead of service IP
@@ -287,6 +302,7 @@ spec:
 ### Deployments - Declarative Pod Management
 
 #### **Deployment Anatomie**
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -305,10 +321,10 @@ spec:
         app: nginx
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.21
-        ports:
-        - containerPort: 80
+        - name: nginx
+          image: nginx:1.21
+          ports:
+            - containerPort: 80
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -317,6 +333,7 @@ spec:
 ```
 
 #### **Rolling Update Process**
+
 ```
 Initial State (3 replicas):
 [Pod1] [Pod2] [Pod3]
@@ -324,13 +341,14 @@ Initial State (3 replicas):
 Rolling Update to new image:
 [Pod1] [Pod2] [Pod3] [Pod4-new] ← Start new pod
 [Pod1] [Pod2-new] [Pod3] [Pod4-new] ← Replace old pod
-[Pod1-new] [Pod2-new] [Pod3] [Pod4-new] ← Replace old pod  
+[Pod1-new] [Pod2-new] [Pod3] [Pod4-new] ← Replace old pod
 [Pod1-new] [Pod2-new] [Pod3-new] ← Final state (remove extra)
 ```
 
 ### ConfigMaps - Configuration Data
 
 #### **ConfigMap Creation**
+
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -341,7 +359,7 @@ data:
   database_host: "mysql.default.svc.cluster.local"
   database_port: "3306"
   log_level: "INFO"
-  
+
   # File-like keys
   nginx.conf: |
     server {
@@ -357,7 +375,7 @@ data:
             proxy_pass http://backend:3000;
         }
     }
-    
+
   application.properties: |
     server.port=8080
     spring.datasource.url=jdbc:mysql://mysql:3306/mydb
@@ -366,6 +384,7 @@ data:
 ```
 
 #### **ConfigMap Usage in Pod**
+
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -373,43 +392,44 @@ metadata:
   name: app-pod
 spec:
   containers:
-  - name: app
-    image: myapp:latest
-    # Environment variables from ConfigMap
-    envFrom:
-    - configMapRef:
-        name: app-config
-    # Specific environment variables
-    env:
-    - name: DATABASE_HOST
-      valueFrom:
-        configMapKeyRef:
-          name: app-config
-          key: database_host
-    # Mount as files
-    volumeMounts:
-    - name: config-volume
-      mountPath: /etc/nginx
-    - name: app-config-volume
-      mountPath: /app/config
+    - name: app
+      image: myapp:latest
+      # Environment variables from ConfigMap
+      envFrom:
+        - configMapRef:
+            name: app-config
+      # Specific environment variables
+      env:
+        - name: DATABASE_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: database_host
+      # Mount as files
+      volumeMounts:
+        - name: config-volume
+          mountPath: /etc/nginx
+        - name: app-config-volume
+          mountPath: /app/config
   volumes:
-  - name: config-volume
-    configMap:
-      name: app-config
-      items:
-      - key: nginx.conf
-        path: nginx.conf
-  - name: app-config-volume
-    configMap:
-      name: app-config
-      items:
-      - key: application.properties
-        path: application.properties
+    - name: config-volume
+      configMap:
+        name: app-config
+        items:
+          - key: nginx.conf
+            path: nginx.conf
+    - name: app-config-volume
+      configMap:
+        name: app-config
+        items:
+          - key: application.properties
+            path: application.properties
 ```
 
 ### Secrets - Sensitive Data
 
 #### **Secret Types**
+
 ```yaml
 # Generic Secret
 apiVersion: v1
@@ -418,8 +438,8 @@ metadata:
   name: app-secrets
 type: Opaque
 data:
-  username: YWRtaW4=      # base64 encoded 'admin'
-  password: MWYyZDFlMmU=  # base64 encoded '1f2d1e2e'
+  username: YWRtaW4= # base64 encoded 'admin'
+  password: MWYyZDFlMmU= # base64 encoded '1f2d1e2e'
 
 ---
 # TLS Secret
@@ -444,6 +464,7 @@ data:
 ```
 
 #### **Secret Usage**
+
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -451,36 +472,37 @@ metadata:
   name: secret-test-pod
 spec:
   containers:
-  - name: app
-    image: myapp:latest
-    env:
-    # Single secret value
-    - name: DB_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: app-secrets
-          key: password
-    # All secret values as env vars
-    envFrom:
-    - secretRef:
-        name: app-secrets
-    # Mount secrets as files
-    volumeMounts:
-    - name: secret-volume
-      mountPath: /etc/secrets
-      readOnly: true
+    - name: app
+      image: myapp:latest
+      env:
+        # Single secret value
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: password
+      # All secret values as env vars
+      envFrom:
+        - secretRef:
+            name: app-secrets
+      # Mount secrets as files
+      volumeMounts:
+        - name: secret-volume
+          mountPath: /etc/secrets
+          readOnly: true
   volumes:
-  - name: secret-volume
-    secret:
-      secretName: app-secrets
+    - name: secret-volume
+      secret:
+        secretName: app-secrets
   # Use docker registry secret
   imagePullSecrets:
-  - name: docker-registry-secret
+    - name: docker-registry-secret
 ```
 
 ### Namespaces - Resource Isolation
 
 #### **Namespace Creation**
+
 ```yaml
 apiVersion: v1
 kind: Namespace
@@ -500,6 +522,7 @@ metadata:
 ```
 
 #### **Resource Quotas per Namespace**
+
 ```yaml
 apiVersion: v1
 kind: ResourceQuota
@@ -526,6 +549,7 @@ spec:
 ### Label Strategy
 
 #### **Recommended Labels**
+
 ```yaml
 metadata:
   labels:
@@ -536,11 +560,11 @@ metadata:
     app.kubernetes.io/component: web-server
     app.kubernetes.io/part-of: ecommerce-platform
     app.kubernetes.io/managed-by: helm
-    
+
     # Environment and tier
     environment: production
     tier: frontend
-    
+
     # Custom business labels
     team: platform
     cost-center: engineering
@@ -548,6 +572,7 @@ metadata:
 ```
 
 #### **Selector Examples**
+
 ```bash
 # Get pods by single label
 kubectl get pods -l app=nginx
@@ -566,6 +591,7 @@ kubectl label nodes node-2 instance-type=memory-optimized
 ```
 
 ### Advanced Selectors
+
 ```yaml
 # In Deployment
 spec:
@@ -573,12 +599,12 @@ spec:
     matchLabels:
       app: nginx
     matchExpressions:
-    - key: tier
-      operator: In
-      values: ["frontend", "web"]
-    - key: environment
-      operator: NotIn
-      values: ["development"]
+      - key: tier
+        operator: In
+        values: ["frontend", "web"]
+      - key: environment
+        operator: NotIn
+        values: ["development"]
 ```
 
 ---
@@ -588,6 +614,7 @@ spec:
 ### Complete E-commerce Platform
 
 #### **Tier 1: Frontend (React/Nginx)**
+
 ```yaml
 # frontend-configmap.yaml
 apiVersion: v1
@@ -645,54 +672,54 @@ spec:
         tier: frontend
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.21-alpine
-        ports:
-        - containerPort: 80
-        volumeMounts:
-        - name: nginx-config
-          mountPath: /etc/nginx/conf.d
-        - name: static-content
-          mountPath: /usr/share/nginx/html
-        resources:
-          requests:
-            memory: "64Mi"
-            cpu: "100m"
-          limits:
-            memory: "128Mi"
-            cpu: "200m"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 80
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 80
-          initialDelaySeconds: 5
-          periodSeconds: 5
+        - name: nginx
+          image: nginx:1.21-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
+            - name: static-content
+              mountPath: /usr/share/nginx/html
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
       # Init container to fetch static content
       initContainers:
-      - name: content-fetcher
-        image: busybox:1.35
-        command: ['sh', '-c']
-        args:
-        - |
-          echo "<!DOCTYPE html>
-          <html><head><title>E-commerce Frontend</title></head>
-          <body><h1>Welcome to our E-commerce Platform</h1>
-          <p>Frontend is running successfully!</p></body></html>" > /static/index.html
-        volumeMounts:
-        - name: static-content
-          mountPath: /static
+        - name: content-fetcher
+          image: busybox:1.35
+          command: ["sh", "-c"]
+          args:
+            - |
+              echo "<!DOCTYPE html>
+              <html><head><title>E-commerce Frontend</title></head>
+              <body><h1>Welcome to our E-commerce Platform</h1>
+              <p>Frontend is running successfully!</p></body></html>" > /static/index.html
+          volumeMounts:
+            - name: static-content
+              mountPath: /static
       volumes:
-      - name: nginx-config
-        configMap:
-          name: frontend-config
-      - name: static-content
-        emptyDir: {}
+        - name: nginx-config
+          configMap:
+            name: frontend-config
+        - name: static-content
+          emptyDir: {}
 
 ---
 # frontend-service.yaml
@@ -706,14 +733,15 @@ metadata:
 spec:
   type: LoadBalancer
   ports:
-  - port: 80
-    targetPort: 80
-    name: http
+    - port: 80
+      targetPort: 80
+      name: http
   selector:
     app: frontend
 ```
 
 #### **Tier 2: Backend (Node.js API)**
+
 ```yaml
 # backend-secrets.yaml
 apiVersion: v1
@@ -723,9 +751,9 @@ metadata:
   namespace: ecommerce
 type: Opaque
 data:
-  database-url: bW9uZ29kYjovL21vbmdvZGI6MjcwMTcvZWNvbW1lcmNl  # mongodb://mongodb:27017/ecommerce
-  jwt-secret: bXlfc3VwZXJfc2VjcmV0X2p3dF9rZXkxMjM=  # my_super_secret_jwt_key123
-  redis-url: cmVkaXM6Ly9yZWRpczozNjM3  # redis://redis:6379
+  database-url: bW9uZ29kYjovL21vbmdvZGI6MjcwMTcvZWNvbW1lcmNl # mongodb://mongodb:27017/ecommerce
+  jwt-secret: bXlfc3VwZXJfc2VjcmV0X2p3dF9rZXkxMjM= # my_super_secret_jwt_key123
+  redis-url: cmVkaXM6Ly9yZWRpczozNjM3 # redis://redis:6379
 
 ---
 # backend-configmap.yaml
@@ -763,77 +791,77 @@ spec:
         tier: backend
     spec:
       containers:
-      - name: api
-        image: node:18-alpine
-        command: ["sh", "-c"]
-        args:
-        - |
-          cat > /app/server.js << 'EOF'
-          const express = require('express');
-          const app = express();
-          const port = process.env.PORT || 3000;
-          
-          app.use(express.json());
-          
-          // Health check
-          app.get('/health', (req, res) => {
-            res.json({ status: 'healthy', timestamp: new Date().toISOString() });
-          });
-          
-          // API routes
-          app.get('/products', (req, res) => {
-            res.json([
-              { id: 1, name: 'Product 1', price: 29.99 },
-              { id: 2, name: 'Product 2', price: 39.99 }
-            ]);
-          });
-          
-          app.get('/users', (req, res) => {
-            res.json({ message: 'Users endpoint', database: process.env.DATABASE_URL });
-          });
-          
-          app.listen(port, () => {
-            console.log(`Backend API running on port ${port}`);
-          });
-          EOF
-          
-          cd /app && npm init -y && npm install express
-          node server.js
-        ports:
-        - containerPort: 3000
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: backend-secrets
-              key: database-url
-        - name: JWT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: backend-secrets
-              key: jwt-secret
-        envFrom:
-        - configMapRef:
-            name: backend-config
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "200m"
-          limits:
-            memory: "256Mi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 3000
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 3000
-          initialDelaySeconds: 5
-          periodSeconds: 5
+        - name: api
+          image: node:18-alpine
+          command: ["sh", "-c"]
+          args:
+            - |
+              cat > /app/server.js << 'EOF'
+              const express = require('express');
+              const app = express();
+              const port = process.env.PORT || 3000;
+
+              app.use(express.json());
+
+              // Health check
+              app.get('/health', (req, res) => {
+                res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+              });
+
+              // API routes
+              app.get('/products', (req, res) => {
+                res.json([
+                  { id: 1, name: 'Product 1', price: 29.99 },
+                  { id: 2, name: 'Product 2', price: 39.99 }
+                ]);
+              });
+
+              app.get('/users', (req, res) => {
+                res.json({ message: 'Users endpoint', database: process.env.DATABASE_URL });
+              });
+
+              app.listen(port, () => {
+                console.log(`Backend API running on port ${port}`);
+              });
+              EOF
+
+              cd /app && npm init -y && npm install express
+              node server.js
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: database-url
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: jwt-secret
+          envFrom:
+            - configMapRef:
+                name: backend-config
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "200m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
 
 ---
 # backend-service.yaml
@@ -846,14 +874,15 @@ metadata:
     app: backend
 spec:
   ports:
-  - port: 3000
-    targetPort: 3000
-    name: http
+    - port: 3000
+      targetPort: 3000
+      name: http
   selector:
     app: backend
 ```
 
 #### **Tier 3: Database (MongoDB)**
+
 ```yaml
 # mongodb-pvc.yaml
 apiVersion: v1
@@ -863,7 +892,7 @@ metadata:
   namespace: ecommerce
 spec:
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
@@ -891,52 +920,52 @@ spec:
         tier: database
     spec:
       containers:
-      - name: mongodb
-        image: mongo:5.0
-        ports:
-        - containerPort: 27017
-        env:
-        - name: MONGO_INITDB_ROOT_USERNAME
-          value: "admin"
-        - name: MONGO_INITDB_ROOT_PASSWORD
-          value: "password123"
-        - name: MONGO_INITDB_DATABASE
-          value: "ecommerce"
-        volumeMounts:
-        - name: mongodb-storage
-          mountPath: /data/db
-        - name: mongodb-init
-          mountPath: /docker-entrypoint-initdb.d
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "200m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        livenessProbe:
-          exec:
-            command:
-            - mongo
-            - --eval
-            - "db.adminCommand('ping')"
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          exec:
-            command:
-            - mongo
-            - --eval
-            - "db.adminCommand('ping')"
-          initialDelaySeconds: 5
-          periodSeconds: 5
+        - name: mongodb
+          image: mongo:5.0
+          ports:
+            - containerPort: 27017
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: "admin"
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: "password123"
+            - name: MONGO_INITDB_DATABASE
+              value: "ecommerce"
+          volumeMounts:
+            - name: mongodb-storage
+              mountPath: /data/db
+            - name: mongodb-init
+              mountPath: /docker-entrypoint-initdb.d
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            exec:
+              command:
+                - mongo
+                - --eval
+                - "db.adminCommand('ping')"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - mongo
+                - --eval
+                - "db.adminCommand('ping')"
+            initialDelaySeconds: 5
+            periodSeconds: 5
       volumes:
-      - name: mongodb-storage
-        persistentVolumeClaim:
-          claimName: mongodb-pvc
-      - name: mongodb-init
-        configMap:
-          name: mongodb-init-scripts
+        - name: mongodb-storage
+          persistentVolumeClaim:
+            claimName: mongodb-pvc
+        - name: mongodb-init
+          configMap:
+            name: mongodb-init-scripts
 
 ---
 # mongodb-init-configmap.yaml
@@ -948,24 +977,24 @@ metadata:
 data:
   init.js: |
     db = db.getSiblingDB('ecommerce');
-    
+
     // Create collections
     db.createCollection('products');
     db.createCollection('users');
     db.createCollection('orders');
-    
+
     // Insert sample data
     db.products.insertMany([
       { name: 'Laptop', price: 999.99, category: 'Electronics', stock: 50 },
       { name: 'Phone', price: 599.99, category: 'Electronics', stock: 100 },
       { name: 'Book', price: 19.99, category: 'Books', stock: 200 }
     ]);
-    
+
     db.users.insertMany([
       { username: 'admin', email: 'admin@example.com', role: 'admin' },
       { username: 'user1', email: 'user1@example.com', role: 'customer' }
     ]);
-    
+
     print('Database initialized successfully');
 
 ---
@@ -979,12 +1008,12 @@ metadata:
     app: mongodb
 spec:
   ports:
-  - port: 27017
-    targetPort: 27017
-    name: mongodb
+    - port: 27017
+      targetPort: 27017
+      name: mongodb
   selector:
     app: mongodb
-  clusterIP: None  # Headless service
+  clusterIP: None # Headless service
 ```
 
 ### Deployment Script
@@ -1129,11 +1158,12 @@ kubectl get endpoints -n ecommerce
 ✅ **Multi-tier Deployment** - Complete applicatie stack  
 ✅ **Resource Management** - Requests, limits, quotas  
 ✅ **Health Checking** - Liveness en readiness probes  
-✅ **Storage** - PersistentVolumes en PersistentVolumeClaims  
+✅ **Storage** - PersistentVolumes en PersistentVolumeClaims
 
 ### Volgende Stappen:
 
 In **Les 8** gaan we lokale development:
+
 - Minikube setup en configuratie
 - Development workflows
 - Hot reloading en debugging
