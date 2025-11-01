@@ -2,6 +2,8 @@
 
 ## Kubernetes Architectuur Deep Dive
 
+![The K8s Architecture](../images/k8s-architecture.gif)
+
 ### Control Plane (Master Nodes)
 
 #### **API Server (kube-apiserver)**
