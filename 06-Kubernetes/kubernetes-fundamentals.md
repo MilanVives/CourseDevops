@@ -16,13 +16,14 @@
 ┌─────────────────────────────────────┐
 │           API Server                │
 │  - Authentication & Authorization   │
-│  - REST API endpoint               │
-│  - Request validation             │
-│  - etcd communication            │
+│  - REST API endpoint                │
+│  - Request validation               │
+│  - etcd communication               │
 └─────────────────────────────────────┘
 ```
 
 ![The K8s API Server](../images/k8s-api-server.gif)
+
 **Functionaliteiten:**
 
 - 🔐 **Authentication**: Wie mag toegang?
@@ -35,10 +36,10 @@
 ```
 ┌─────────────────────────────────────┐
 │               etcd                  │
-│  - Cluster state storage           │
-│  - Configuration data              │
-│  - Secrets & ConfigMaps           │
-│  - Service discovery info         │
+│  - Cluster state storage            │
+│  - Configuration data               │
+│  - Secrets & ConfigMaps             │
+│  - Service discovery info           │
 └─────────────────────────────────────┘
 ```
 
@@ -91,18 +92,18 @@
 ```
 ┌─────────────────────────────────────┐
 │              kubelet                │
-│  - Pod lifecycle management        │
-│  - Container runtime communication │
-│  - Node status reporting           │
-│  - Health checks execution         │
+│  - Pod lifecycle management         │
+│  - Container runtime communication  │
+│  - Node status reporting            │
+│  - Health checks execution          │
 └─────────────────────────────────────┘
                     │
                     ▼
 ┌─────────────────────────────────────┐
 │         Container Runtime           │
-│  - Docker/containerd/CRI-O         │
-│  - Image pulling & management      │
-│  - Container execution             │
+│  - Docker/containerd/CRI-O          │
+│  - Image pulling & management       │
+│  - Container execution              │
 └─────────────────────────────────────┘
 ```
 
@@ -111,10 +112,10 @@
 ```
 ┌─────────────────────────────────────┐
 │            kube-proxy               │
-│  - Service load balancing          │
-│  - Network rules management        │
-│  - iptables/IPVS configuration     │
-│  - ClusterIP implementation        │
+│  - Service load balancing           │
+│  - Network rules management         │
+│  - iptables/IPVS configuration      │
+│  - ClusterIP implementation         │
 └─────────────────────────────────────┘
 ```
 
