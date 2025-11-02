@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{.Values.app.deployment.name}}
+  labels:
+    app: webapp
+spec:
+  replicas: {{.Values.app.replicas}}
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+      - name: {{.Values.app.containerName}}
+        image: {{.values.app.image}}:{{.Values.app.tag}}
+        ports:
+        - containerPort: {{.Values.app.containerPort}}
+        env:
+        - name: {{.values.app.env.nameUser}}
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: mongo-user
+        - name: {{.Values.app.env.namePWD}}
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: mongo-password 
+        - name: {{.Values.app.env.nameDB}}
+          valueFrom:
+            configMapKeyRef:
+              name: mongo-config
+              key: mongo-url
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{.Values.app.service.name}}
+spec:
+  type: {{.Values.app.service.type}}
+  selector:
+    app: {{.Values.app.service.selector}}
+  ports:
+    - protocol: TCP
+      port: {{.Values.app.service.port}}
+      targetPort: {{.Values.app.service.targetPort}}
+      nodePort: {{.Values.app.service.nodePort}}
