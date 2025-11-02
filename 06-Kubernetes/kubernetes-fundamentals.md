@@ -1,4 +1,4 @@
-# Les 7: Kubernetes Fundamentals & Theory
+# Kubernetes Fundamentals & Theory
 
 ## Kubernetes Architectuur Deep Dive
 
@@ -57,18 +57,18 @@
 ```
 ┌─────────────────────────────────────┐
 │            Scheduler                │
-│  - Pod placement decisions         │
-│  - Resource requirements          │
-│  - Node capacity evaluation       │
-│  - Affinity/Anti-affinity rules   │
+│  - Pod placement decisions          │
+│  - Resource requirements            │
+│  - Node capacity evaluation         │
+│  - Affinity/Anti-affinity rules     │
 └─────────────────────────────────────┘
                     │
                     ▼
 ┌─────────────────────────────────────┐
 │             Nodes                   │
-│  Node 1: 2 CPU, 4GB RAM available │
-│  Node 2: 4 CPU, 8GB RAM available │
-│  Node 3: 1 CPU, 2GB RAM available │
+│  Node 1: 2 CPU, 4GB RAM available   │
+│  Node 2: 4 CPU, 8GB RAM available   │
+│  Node 3: 1 CPU, 2GB RAM available   │
 └─────────────────────────────────────┘
 ```
 
