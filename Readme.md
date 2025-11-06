@@ -34,6 +34,7 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
 
 - [Dockerfile Tutorial](02-Dockerfile/Dockerfile-Intro.md) - Van Docker run naar distribueerbare images
 - [Dockerfile Advanced](02-Dockerfile/Dockerfile-Advanced.md) - Geavanceerde Dockerfile technieken en optimalisaties
+- [Dockerfile Multiplatform](02-Dockerfile/Dockerfile-Multiplatform.md) - Multi-platform builds voor ARM en x86 architecturen
 - **Onderwerpen:**
   - Images bouwen met Dockerfile
   - Docker layer systeem en caching
@@ -43,6 +44,8 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
   - Geavanceerde Dockerfile instructies en optimalisatie technieken
   - Security best practices en image hardening
   - Build context optimalisatie en .dockerignore
+  - Multi-platform builds voor ARM (macOS M1/M2/M3) en x86_64 architecturen
+  - BuildKit en buildx voor cross-platform image creation
 
 ## [Les 3 – Docker Compose](03-Compose/)
 
