@@ -139,9 +139,17 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
   - External DNS en domain management
   - Container-naar-container proxy routing
 
-## [Les 9 – CI/CD](09-CI-CD/) *[Komt binnenkort]*
+## [Les 9 – CI/CD](09-CI-CD/)
 
+- [Complete Pipeline Example](09-CI-CD/Example-Pipeline.md) - GitHub Actions CI/CD voor frontend/backend deployment
 - **Onderwerpen:**
+  - Complete GitHub Actions pipeline setup
+  - Docker image building en versioning
+  - Docker Hub registry management
+  - Automated deployment naar production servers
+  - SSH key en secrets management
+  - Docker Hub tokens en GitHub secrets configuratie
+  - Zero-downtime deployments met docker compose
   - GitOps principes en workflow patterns
   - ArgoCD voor declaratieve deployments
   - Flux voor continuous delivery
