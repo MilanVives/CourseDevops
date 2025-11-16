@@ -1,4 +1,13 @@
-# Kubernetes met Minikube: 2-Tier Applicatie Deployment
+# Kubernetes met Minikube: 3-Tier Pet Shelter Applicatie Deployment
+
+## Tutorial Repository
+
+**Clone de repository voor deze tutorial:**
+
+```bash
+git clone https://github.com/MilanVives/PetShelter-minimal.git
+cd PetShelter-minimal
+```
 
 ## Inhoudsopgave
 
@@ -27,78 +36,95 @@ Minikube is een tool die een single-node Kubernetes cluster lokaal op je machine
 ### Architectuur Overzicht
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│                      Jouw Machine                          │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │                    Minikube                          │  │
-│  │  ┌────────────────────────────────────────────────┐  │  │
-│  │  │          Kubernetes Cluster (VM/Docker)        │  │  │
-│  │  │                                                │  │  │
-│  │  │  ┌──────────────────┐  ┌──────────────────┐    │  │  │
-│  │  │  │   Web App Pod    │  │  MongoDB Pod     │    │  │  │
-│  │  │  │   (Node.js)      │  │  (Database)      │    │  │  │
-│  │  │  │   Port: 3000     │  │  Port: 27017     │    │  │  │
-│  │  │  └──────────────────┘  └──────────────────┘    │  │  │
-│  │  │          │                      │              │  │  │
-│  │  │          └──────────────────────┘              │  │  │
-│  │  │                                                │  │  │
-│  │  │  ┌──────────────────────────────────────┐      │  │  │
-│  │  │  │    Services & Networking             │      │  │  │
-│  │  │  │  - webapp-service (NodePort:30100)   │      │  │  │
-│  │  │  │  - mongo-service (ClusterIP:27017)   │      │  │  │
-│  │  │  └──────────────────────────────────────┘      │  │  │
-│  │  │                                                │  │  │
-│  │  │  ┌──────────────────────────────────────┐      │  │  │
-│  │  │  │   ConfigMaps & Secrets               │      │  │  │
-│  │  │  │  - mongo-secret (credentials)        │      │  │  │
-│  │  │  │  - mongo-config (database URL)       │      │  │  │
-│  │  │  └──────────────────────────────────────┘      │  │  │
-│  │  └────────────────────────────────────────────────┘  │  │
-│  └──────────────────────────────────────────────────────┘  │
-│                          ▲                                 │
-│                          │ kubectl                         │
-│                          │                                 │
-└────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│                      Jouw Machine                              │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                    Minikube                              │  │
+│  │  ┌────────────────────────────────────────────────────┐  │  │
+│  │  │          Kubernetes Cluster (VM/Docker)            │  │  │
+│  │  │                                                    │  │  │
+│  │  │  ┌────────────┐  ┌────────────┐  ┌────────────┐   │  │  │
+│  │  │  │ Frontend   │  │  Backend   │  │  MongoDB   │   │  │  │
+│  │  │  │   Pod      │  │    Pod     │  │    Pod     │   │  │  │
+│  │  │  │ (Express)  │  │ (Node.js)  │  │ (Database) │   │  │  │
+│  │  │  │ Port: 3000 │  │ Port: 5000 │  │ Port:27017 │   │  │  │
+│  │  │  └────────────┘  └────────────┘  └────────────┘   │  │  │
+│  │  │        │               │               │          │  │  │
+│  │  │        └───────────────┴───────────────┘          │  │  │
+│  │  │                                                    │  │  │
+│  │  │  ┌──────────────────────────────────────────┐     │  │  │
+│  │  │  │    Services & Networking                 │     │  │  │
+│  │  │  │  - frontend-service (NodePort:32500)     │     │  │  │
+│  │  │  │  - backend-service (ClusterIP:5000)      │     │  │  │
+│  │  │  │  - mongodb-service (ClusterIP:27017)     │     │  │  │
+│  │  │  └──────────────────────────────────────────┘     │  │  │
+│  │  │                                                    │  │  │
+│  │  │  ┌──────────────────────────────────────────┐     │  │  │
+│  │  │  │   ConfigMaps & Secrets                   │     │  │  │
+│  │  │  │  - mongodb-secret (credentials)          │     │  │  │
+│  │  │  │  - mongodb-configmap (database config)   │     │  │  │
+│  │  │  └──────────────────────────────────────────┘     │  │  │
+│  │  └────────────────────────────────────────────────────┘  │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                          ▲                                     │
+│                          │ kubectl                             │
+│                          │                                     │
+└────────────────────────────────────────────────────────────────┘
 ```
 
 ### Wat Gaan We Bouwen?
 
-Een 2-tier applicatie bestaande uit:
+Een 3-tier Pet Shelter applicatie bestaande uit:
 
-- **Web Application**: Node.js/Express applicatie met user profile pagina
-- **Database**: MongoDB voor data opslag
+- **Frontend**: HTML/JavaScript interface geserveerd door Express (Port 3000)
+- **Backend**: Node.js REST API met endpoints voor pets (Port 5000)
+- **Database**: MongoDB voor opslag van pet gegevens (Port 27017)
 
 **Applicatie Flow:**
 
 ```
 User Browser
      │
-     │ HTTP Request (port 30100)
+     │ HTTP Request (port 32500)
      ▼
 ┌─────────────────────┐
-│  webapp-service     │ (NodePort)
-│  Port: 30100→3000   │
+│  frontend-service   │ (NodePort)
+│  Port: 32500→3000   │
 └─────────────────────┘
      │
      │ Internal routing
      ▼
 ┌─────────────────────┐
-│  webapp-deployment  │
-│  (Node.js App)      │
+│ frontend-deployment │
+│  (Express/HTML)     │
 │  Port: 3000         │
+└─────────────────────┘
+     │
+     │ API Calls to Backend
+     ▼
+┌─────────────────────┐
+│  backend-service    │ (ClusterIP)
+│  Port: 5000         │
+└─────────────────────┘
+     │
+     ▼
+┌─────────────────────┐
+│  backend-deployment │
+│  (Node.js API)      │
+│  Port: 5000         │
 └─────────────────────┘
      │
      │ MongoDB Connection
      │ (via env vars from Secret & ConfigMap)
      ▼
 ┌─────────────────────┐
-│  mongo-service      │ (ClusterIP)
+│  mongodb-service    │ (ClusterIP)
 │  Port: 27017        │
 └─────────────────────┘
      │
      ▼
 ┌─────────────────────┐
-│  mongo-deployment   │
+│  mongodb-deployment │
 │  (MongoDB)          │
 │  Port: 27017        │
 └─────────────────────┘
@@ -235,111 +261,119 @@ kubeconfig: Configured
 
 ### Project Structuur
 
-De demo applicatie heeft de volgende structuur:
+De Pet Shelter applicatie heeft de volgende structuur:
 
 ```
-minikube-demo/
-├── nodedemoapp/
-│   └── app/
-│       ├── server.js          # Node.js Express server
-│       ├── index.html         # Frontend HTML
-│       ├── package.json       # Node.js dependencies
-│       └── images/            # Profile afbeeldingen
-│           └── profile-1.jpg
-├── k8s-demo/
-│   ├── README.md              # Kubernetes documentatie
-│   ├── mongo-secret.yaml      # MongoDB credentials (Secret)
-│   ├── mongo-config.yaml      # MongoDB URL (ConfigMap)
-│   ├── mongo.yaml             # MongoDB Deployment & Service
-│   └── webapp.yaml            # WebApp Deployment & Service
-└── helm/
-    └── nodedemochart/         # Helm chart (optioneel)
+PetShelter-minimal/
+├── frontend/
+│   ├── Dockerfile             # Frontend container
+│   ├── package.json           # Node.js dependencies
+│   ├── server.js              # Express server
+│   └── public/
+│       └── index.html         # Pet Shelter UI
+├── backend/
+│   ├── Dockerfile             # Backend container
+│   ├── package.json           # Node.js dependencies
+│   └── server.js              # REST API server
+├── k8s/
+│   ├── mongodb-secret.yaml    # MongoDB credentials (Secret)
+│   ├── mongodb-configmap.yaml # MongoDB config (ConfigMap)
+│   ├── mongodb-deployment.yaml # MongoDB Deployment & Service
+│   ├── backend-deployment.yaml # Backend Deployment & Service
+│   └── frontend-deployment.yaml # Frontend Deployment & Service
+├── docker-compose.yml         # Voor lokale development
+└── README.md                  # Documentatie
 ```
 
 ### Applicatie Componenten
 
-#### 1. Web Application (Node.js + Express)
+#### 1. Frontend (Express + HTML/JavaScript)
 
 **Functionaliteiten:**
 
-- User profile pagina met naam, email en interesses
-- Mogelijkheid om profile te bewerken
-- Opslag van data in MongoDB
+- Overzicht van alle pets in de shelter
+- Formulier om nieuwe pets toe te voegen
+- Maakt API calls naar de backend
 - Express server op poort 3000
 
-**Dependencies (package.json):**
+**Backend API calls:**
 
-```json
-{
-  "name": "developing-with-docker",
-  "version": "1.0.0",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "body-parser": "^1.19.0",
-    "express": "^4.17.1",
-    "mongodb": "^3.3.3"
-  }
-}
-```
+- `GET /api/pets` - Haal alle pets op
+- `POST /api/pets` - Voeg nieuwe pet toe
 
-**Key Features van server.js:**
-
-- MongoDB connectie via environment variables:
-  - `USER_NAME` (van Secret)
-  - `USER_PWD` (van Secret)
-  - `DB_URL` (van ConfigMap)
-- REST API endpoints:
-  - `GET /` - Serve HTML pagina
-  - `GET /get-profile` - Haal user profile op
-  - `POST /update-profile` - Update user profile
-  - `GET /profile-picture` - Serve profiel foto
-
-#### 2. MongoDB Database
+#### 2. Backend (Node.js REST API)
 
 **Specificaties:**
 
-- Image: `mongo:5.0`
+- Image: `dimilan/pet-shelter-backend:latest`
+- Port: 5000
+- MongoDB connectie via environment variables
+- Automatische database seeding met voorbeeld pets
+
+**API Endpoints:**
+
+- `GET /api/pets` - Alle pets ophalen
+- `POST /api/pets` - Nieuwe pet toevoegen
+
+**Environment Variables:**
+
+- `MONGO_USERNAME` (van Secret)
+- `MONGO_PASSWORD` (van Secret)
+- `MONGO_HOST` (van ConfigMap)
+- `MONGO_PORT` (van ConfigMap)
+- `MONGO_DB` (van ConfigMap)
+
+#### 3. MongoDB Database
+
+**Specificaties:**
+
+- Image: `mongo:latest`
 - Port: 27017
 - Root credentials via Secret
-- Database naam: `my-db`
-- Collection: `users`
+- Database naam: `petshelter`
+- Collection: `pets`
 
 ---
 
 ## Kubernetes Resources Aanmaken
 
-### Stap 1: Secret voor MongoDB Credentials
+### Stap 1: Clone de Repository
 
-Secrets worden gebruikt om gevoelige informatie zoals wachtwoorden veilig op te slaan.
+```bash
+git clone https://github.com/MilanVives/PetShelter-minimal.git
+cd PetShelter-minimal
+```
 
-**mongo-secret.yaml:**
+De repository bevat een `k8s/` folder met alle benodigde Kubernetes configuraties.
+
+### Stap 2: MongoDB Secret
+
+**k8s/mongodb-secret.yaml**
 
 ```yaml
 apiVersion: v1
 kind: Secret
 metadata:
-  name: mongo-secret
+  name: mongodb-secret
 type: Opaque
 data:
-  mongo-user: bW9uZ291c2Vy
-  mongo-password: bW9uZ29wYXNzd29yZA==
+  username: YWRtaW4=       # base64 encoded 'admin'
+  password: cGFzc3dvcmQ=   # base64 encoded 'password'
 ```
 
-**Belangrijk:** De waarden in `data` zijn **base64 encoded**.
-
-**Credentials decoderen:**
+**Base64 encoding uitleg:**
 
 ```bash
-# Decode username
-echo "bW9uZ291c2Vy" | base64 --decode
-# Output: mongouser
+# Encode
+echo -n 'admin' | base64
+# Output: YWRtaW4=
 
-# Decode password
-echo "bW9uZ29wYXNzd29yZA==" | base64 --decode
-# Output: mongopassword
+echo -n 'password' | base64
+# Output: cGFzc3dvcmQ=
+
+# Decode (voor verificatie)
+echo 'YWRtaW4=' | base64 --decode
+# Output: admin
 ```
 
 **Eigen Secret maken:**
@@ -350,9 +384,9 @@ echo -n "myusername" | base64
 echo -n "mypassword" | base64
 
 # Of maak Secret imperatively
-kubectl create secret generic mongo-secret \
-  --from-literal=mongo-user=mongouser \
-  --from-literal=mongo-password=mongopassword
+kubectl create secret generic mongodb-secret \
+  --from-literal=username=admin \
+  --from-literal=password=password
 ```
 
 **Secret Uitleg:**
@@ -361,26 +395,26 @@ kubectl create secret generic mongo-secret \
 apiVersion: v1 # API versie voor Secret
 kind: Secret # Resource type
 metadata:
-  name: mongo-secret # Naam van de Secret (gebruikt in Deployments)
+  name: mongodb-secret # Naam van de Secret (gebruikt in Deployments)
 type: Opaque # Generic key-value secret type
 data: # Base64-encoded data
-  mongo-user: <base64> # MongoDB username
-  mongo-password: <base64> # MongoDB password
+  username: <base64> # MongoDB username
+  password: <base64> # MongoDB password
 ```
 
-### Stap 2: ConfigMap voor MongoDB URL
+### Stap 3: MongoDB ConfigMap
 
-ConfigMaps worden gebruikt voor niet-gevoelige configuratie data.
-
-**mongo-config.yaml:**
+**k8s/mongodb-configmap.yaml**
 
 ```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mongo-config
+  name: mongodb-configmap
 data:
-  mongo-url: mongo-service
+  database-url: mongodb-service
+  database-port: "27017"
+  database-name: petshelter
 ```
 
 **ConfigMap Uitleg:**
@@ -389,63 +423,65 @@ data:
 apiVersion: v1 # API versie voor ConfigMap
 kind: ConfigMap # Resource type
 metadata:
-  name: mongo-config # Naam van de ConfigMap
+  name: mongodb-configmap # Naam van de ConfigMap
 data: # Plain text data (niet encrypted)
-  mongo-url: mongo-service # MongoDB service naam (interne DNS)
+  database-url: mongodb-service # MongoDB service naam (interne DNS)
+  database-port: "27017" # MongoDB poort
+  database-name: petshelter # Database naam
 ```
 
-**Waarom mongo-service?**
+**Waarom mongodb-service?**
 
 - Kubernetes creëert automatisch DNS entries voor Services
 - Pods kunnen elkaar bereiken via de Service naam
 - Format: `<service-name>.<namespace>.svc.cluster.local`
 - Binnen zelfde namespace: gewoon `<service-name>`
 
-### Stap 3: MongoDB Deployment en Service
+### Stap 4: MongoDB Deployment & Service
 
-**mongo.yaml:**
+**k8s/mongodb-deployment.yaml**
 
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mongo-deployment
+  name: mongodb-deployment
   labels:
-    app: mongo
+    app: mongodb
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mongo
+      app: mongodb
   template:
     metadata:
       labels:
-        app: mongo
+        app: mongodb
     spec:
       containers:
         - name: mongodb
-          image: mongo:5.0
+          image: mongo:latest
           ports:
             - containerPort: 27017
           env:
             - name: MONGO_INITDB_ROOT_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret
-                  key: mongo-user
+                  name: mongodb-secret
+                  key: username
             - name: MONGO_INITDB_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret
-                  key: mongo-password
+                  name: mongodb-secret
+                  key: password
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongo-service
+  name: mongodb-service
 spec:
   selector:
-    app: mongo
+    app: mongodb
   ports:
     - protocol: TCP
       port: 27017
@@ -458,35 +494,35 @@ spec:
 apiVersion: apps/v1 # API versie voor Deployment
 kind: Deployment # Resource type
 metadata:
-  name: mongo-deployment # Deployment naam
+  name: mongodb-deployment # Deployment naam
   labels:
-    app: mongo # Labels voor organisatie
+    app: mongodb # Labels voor organisatie
 spec:
   replicas: 1 # Aantal pod replicas
   selector:
     matchLabels:
-      app: mongo # Selecteer pods met dit label
+      app: mongodb # Selecteer pods met dit label
   template: # Pod template
     metadata:
       labels:
-        app: mongo # Label voor pods
+        app: mongodb # Label voor pods
     spec:
       containers:
         - name: mongodb # Container naam
-          image: mongo:5.0 # Docker image
+          image: mongo:latest # Docker image
           ports:
             - containerPort: 27017 # MongoDB poort
           env: # Environment variables
             - name: MONGO_INITDB_ROOT_USERNAME
               valueFrom:
                 secretKeyRef: # Haal waarde uit Secret
-                  name: mongo-secret
-                  key: mongo-user
+                  name: mongodb-secret
+                  key: username
             - name: MONGO_INITDB_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret
-                  key: mongo-password
+                  name: mongodb-secret
+                  key: password
 ```
 
 **Service Uitleg:**
@@ -495,10 +531,10 @@ spec:
 apiVersion: v1 # API versie voor Service
 kind: Service # Resource type
 metadata:
-  name: mongo-service # Service naam (gebruikt als DNS naam)
+  name: mongodb-service # Service naam (gebruikt als DNS naam)
 spec:
   selector:
-    app: mongo # Route traffic naar pods met dit label
+    app: mongodb # Route traffic naar pods met dit label
   ports:
     - protocol: TCP # Protocol
       port: 27017 # Service poort (intern bereikbaar)
@@ -511,118 +547,220 @@ spec:
 - Heeft intern IP adres
 - Perfect voor databases (geen externe toegang nodig)
 
-### Stap 4: WebApp Deployment en Service
+### Stap 5: Backend API Deployment & Service
 
-**webapp.yaml:**
+**k8s/backend-deployment.yaml**
 
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: webapp-deployment
+  name: backend-deployment
   labels:
-    app: webapp
+    app: backend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: webapp
+      app: backend
   template:
     metadata:
       labels:
-        app: webapp
+        app: backend
     spec:
       containers:
-        - name: webapp
-          image: dimilan/k8s-demo-app:v1.0
+        - name: backend
+          image: dimilan/pet-shelter-backend:latest
+          imagePullPolicy: Never
           ports:
-            - containerPort: 3000
+            - containerPort: 5000
           env:
-            - name: USER_NAME
+            - name: MONGO_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret
-                  key: mongo-user
-            - name: USER_PWD
+                  name: mongodb-secret
+                  key: username
+            - name: MONGO_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret
-                  key: mongo-password
-            - name: DB_URL
+                  name: mongodb-secret
+                  key: password
+            - name: MONGO_HOST
               valueFrom:
                 configMapKeyRef:
-                  name: mongo-config
-                  key: mongo-url
+                  name: mongodb-configmap
+                  key: database-url
+            - name: MONGO_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: mongodb-configmap
+                  key: database-port
+            - name: MONGO_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: mongodb-configmap
+                  key: database-name
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: webapp-service
+  name: backend-service
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
-    app: webapp
+    app: backend
   ports:
     - protocol: TCP
-      port: 3000
-      targetPort: 3000
-      nodePort: 30100
+      port: 5000
+      targetPort: 5000
 ```
 
-**WebApp Deployment Uitleg:**
+**Backend Deployment Uitleg:**
 
 ```yaml
 spec:
-  replicas: 1 # Aantal webapp instances
+  replicas: 1 # Aantal backend instances
   template:
     spec:
       containers:
-        - name: webapp
-          image: dimilan/k8s-demo-app:v1.0 # Pre-built Docker image
+        - name: backend
+          image: dimilan/pet-shelter-backend:latest # Pre-built Docker image
+          imagePullPolicy: Never # Gebruik lokale image in Minikube
           ports:
-            - containerPort: 3000 # Node.js app poort
+            - containerPort: 5000 # Backend API poort
           env: # Environment variables voor MongoDB connectie
-            - name: USER_NAME # MongoDB username (van Secret)
+            - name: MONGO_USERNAME # MongoDB username (van Secret)
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret
-                  key: mongo-user
-            - name: USER_PWD # MongoDB password (van Secret)
+                  name: mongodb-secret
+                  key: username
+            - name: MONGO_PASSWORD # MongoDB password (van Secret)
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret
-                  key: mongo-password
-            - name: DB_URL # MongoDB URL (van ConfigMap)
+                  name: mongodb-secret
+                  key: password
+            - name: MONGO_HOST # MongoDB hostname (van ConfigMap)
               valueFrom:
                 configMapKeyRef:
-                  name: mongo-config
-                  key: mongo-url
+                  name: mongodb-configmap
+                  key: database-url
+            - name: MONGO_PORT # MongoDB port (van ConfigMap)
+              valueFrom:
+                configMapKeyRef:
+                  name: mongodb-configmap
+                  key: database-port
+            - name: MONGO_DB # Database naam (van ConfigMap)
+              valueFrom:
+                configMapKeyRef:
+                  name: mongodb-configmap
+                  key: database-name
 ```
 
 **MongoDB Connection String:**
-De webapp bouwt de volgende connection string:
+De backend bouwt de volgende connection string:
 
 ```javascript
-let mongoUrlK8s = `mongodb://${process.env.USER_NAME}:${process.env.USER_PWD}@${process.env.DB_URL}`;
-// Resulteert in: mongodb://mongouser:mongopassword@mongo-service
+const mongoUrl = `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}?authSource=admin`;
+// Resulteert in: mongodb://admin:password@mongodb-service:27017/petshelter?authSource=admin
 ```
 
-**WebApp Service Uitleg:**
+**Backend Service Uitleg:**
 
 ```yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: webapp-service
+  name: backend-service
+spec:
+  type: ClusterIP # Alleen intern bereikbaar
+  selector:
+    app: backend # Route naar backend pods
+  ports:
+    - protocol: TCP
+      port: 5000 # Internal service port
+      targetPort: 5000 # Container port
+```
+
+**Service Type: ClusterIP**
+
+- Alleen bereikbaar binnen het cluster
+- Frontend kan backend bereiken via `http://backend-service:5000`
+- Perfect voor backend services die niet direct extern toegankelijk moeten zijn
+
+### Stap 6: Frontend Deployment & Service
+
+**k8s/frontend-deployment.yaml**
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  labels:
+    app: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: dimilan/pet-shelter-frontend:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+spec:
+  type: NodePort
+  selector:
+    app: frontend
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 32500
+```
+
+**Frontend Deployment Uitleg:**
+
+```yaml
+spec:
+  replicas: 1 # Aantal frontend instances
+  template:
+    spec:
+      containers:
+        - name: frontend
+          image: dimilan/pet-shelter-frontend:latest # Pre-built Docker image
+          imagePullPolicy: Never # Gebruik lokale image in Minikube
+          ports:
+            - containerPort: 3000 # Frontend server poort
+```
+
+**Frontend Service Uitleg:**
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
 spec:
   type: NodePort # Expose service extern via Node port
   selector:
-    app: webapp # Route naar webapp pods
+    app: frontend # Route naar frontend pods
   ports:
     - protocol: TCP
       port: 3000 # Internal service port
       targetPort: 3000 # Container port
-      nodePort: 30100 # External access port (30000-32767)
+      nodePort: 32500 # External access port (30000-32767)
 ```
 
 **Service Type: NodePort**
@@ -658,12 +796,29 @@ minikube status
 kubectl get nodes
 ```
 
-#### Stap 2: Clone de Repository
+#### Stap 2: Clone de Repository en Build Images
 
 ```bash
-# Clone de demo repository
-git clone https://github.com/MilanVives/minikube-demo.git
-cd minikube-demo/k8s-demo
+# Clone de repository
+git clone https://github.com/MilanVives/PetShelter-minimal.git
+cd PetShelter-minimal
+
+# Point Docker CLI naar Minikube's Docker daemon
+eval $(minikube docker-env)
+
+# Build backend image
+cd backend
+docker build -t dimilan/pet-shelter-backend:latest .
+
+# Build frontend image
+cd ../frontend
+docker build -t dimilan/pet-shelter-frontend:latest .
+
+# Ga terug naar root directory
+cd ..
+
+# Verifieer images
+docker images | grep pet-shelter
 ```
 
 #### Stap 3: Deploy in de Juiste Volgorde
@@ -673,46 +828,62 @@ cd minikube-demo/k8s-demo
 1. Secret (credentials)
 2. ConfigMap (configuratie)
 3. MongoDB (database eerst)
-4. WebApp (applicatie laatst)
+4. Backend (API laag)
+5. Frontend (UI laatst)
 
 ```bash
 # 1. Maak Secret aan
-kubectl apply -f mongo-secret.yaml
+kubectl apply -f k8s/mongodb-secret.yaml
 
 # Verifieer Secret
 kubectl get secret
-kubectl describe secret mongo-secret
+kubectl describe secret mongodb-secret
 
 # 2. Maak ConfigMap aan
-kubectl apply -f mongo-config.yaml
+kubectl apply -f k8s/mongodb-configmap.yaml
 
 # Verifieer ConfigMap
 kubectl get configmap
-kubectl describe configmap mongo-config
+kubectl describe configmap mongodb-configmap
 
 # 3. Deploy MongoDB
-kubectl apply -f mongo.yaml
+kubectl apply -f k8s/mongodb-deployment.yaml
 
 # Wacht tot MongoDB pod ready is
 kubectl get pods -w
-# Druk Ctrl+C als mongo pod STATUS = Running en READY = 1/1
+# Druk Ctrl+C als mongodb pod STATUS = Running en READY = 1/1
 
 # Verifieer MongoDB deployment
-kubectl get deployment mongo-deployment
-kubectl get service mongo-service
-kubectl get pods -l app=mongo
+kubectl get deployment mongodb-deployment
+kubectl get service mongodb-service
+kubectl get pods -l app=mongodbdb
 
-# 4. Deploy WebApp
-kubectl apply -f webapp.yaml
+# 4. Deploy Backend
+kubectl apply -f k8s/backend-deployment.yaml
 
-# Wacht tot WebApp pod ready is
+# Wacht tot backend pod ready is
 kubectl get pods -w
-# Druk Ctrl+C als webapp pod STATUS = Running en READY = 1/1
+# Druk Ctrl+C als backend pod STATUS = Running en READY = 1/1
 
-# Verifieer WebApp deployment
-kubectl get deployment webapp-deployment
-kubectl get service webapp-service
-kubectl get pods -l app=webapp
+# Verifieer backend deployment
+kubectl get deployment backend-deployment
+kubectl get service backend-service
+kubectl get pods -l app=backend
+
+# Check backend logs voor database seeding
+kubectl logs -l app=backend
+
+# 5. Deploy Frontend
+kubectl apply -f k8s/frontend-deployment.yaml
+
+# Wacht tot frontend pod ready is
+kubectl get pods -w
+# Druk Ctrl+C als frontend pod STATUS = Running en READY = 1/1
+
+# Verifieer frontend deployment
+kubectl get deployment frontend-deployment
+kubectl get service frontend-service
+kubectl get pods -l app=frontend
 ```
 
 #### Stap 4: Verifieer Volledige Deployment
@@ -737,35 +908,42 @@ kubectl get secret,configmap
 $ kubectl get all
 
 NAME                                      READY   STATUS    RESTARTS   AGE
-pod/mongo-deployment-7d8f9b6c5-xyz12     1/1     Running   0          5m
-pod/webapp-deployment-6c9d8e7f5-abc34    1/1     Running   0          2m
+pod/mongodb-deployment-7d8f9b6c5-xyz12    1/1     Running   0          7m
+pod/backend-deployment-6c9d8e7f5-abc34    1/1     Running   0          4m
+pod/frontend-deployment-8a1b2c3d4-def56   1/1     Running   0          2m
 
-NAME                     TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
-service/kubernetes       ClusterIP   10.96.0.1       <none>        443/TCP          30m
-service/mongo-service    ClusterIP   10.96.100.20    <none>        27017/TCP        5m
-service/webapp-service   NodePort    10.96.100.30    <none>        3000:30100/TCP   2m
+NAME                       TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+service/kubernetes         ClusterIP   10.96.0.1       <none>        443/TCP          30m
+service/mongodb-service    ClusterIP   10.96.100.20    <none>        27017/TCP        7m
+service/backend-service    ClusterIP   10.96.100.30    <none>        5000/TCP         4m
+service/frontend-service   NodePort    10.96.100.40    <none>        3000:32500/TCP   2m
 
-NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/mongo-deployment    1/1     1            1           5m
-deployment.apps/webapp-deployment   1/1     1            1           2m
+NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/mongodb-deployment   1/1     1            1           7m
+deployment.apps/backend-deployment   1/1     1            1           4m
+deployment.apps/frontend-deployment  1/1     1            1           2m
 
 NAME                                          DESIRED   CURRENT   READY   AGE
-replicaset.apps/mongo-deployment-7d8f9b6c5   1         1         1       5m
-replicaset.apps/webapp-deployment-6c9d8e7f5  1         1         1       2m
+replicaset.apps/mongodb-deployment-7d8f9b6c5  1         1         1       7m
+replicaset.apps/backend-deployment-6c9d8e7f5  1         1         1       4m
+replicaset.apps/frontend-deployment-8a1b2c3d4 1         1         1       2m
 ```
 
 ### Deployment met Een Command
 
 ```bash
 # Deploy alles in één keer (let op de volgorde!)
-kubectl apply -f mongo-secret.yaml && \
-kubectl apply -f mongo-config.yaml && \
-kubectl apply -f mongo.yaml && \
+kubectl apply -f k8s/mongodb-secret.yaml && \
+kubectl apply -f k8s/mongodb-configmap.yaml && \
+kubectl apply -f k8s/mongodb-deployment.yaml && \
 sleep 30 && \
-kubectl apply -f webapp.yaml
+kubectl apply -f k8s/backend-deployment.yaml && \
+sleep 20 && \
+kubectl apply -f k8s/frontend-deployment.yaml
 
-# Of gebruik een directory
-kubectl apply -f .
+# Of gebruik de hele k8s directory
+kubectl apply -f k8s/
+```
 ```
 
 ---
@@ -777,8 +955,8 @@ kubectl apply -f .
 Dit is de makkelijkste manier om toegang te krijgen tot de NodePort service.
 
 ```bash
-# Open webapp in browser
-minikube service webapp-service
+# Open frontend in browser
+minikube service frontend-service
 
 # Dit opent automatisch je browser op het juiste adres
 ```
@@ -792,9 +970,9 @@ minikube service webapp-service
 **Alleen URL krijgen (zonder browser te openen):**
 
 ```bash
-minikube service webapp-service --url
+minikube service frontend-service --url
 
-# Output: http://192.168.49.2:30100
+# Output: http://192.168.49.2:32500
 ```
 
 ### Methode 2: Minikube IP + NodePort
@@ -803,11 +981,11 @@ minikube service webapp-service --url
 # Haal Minikube IP op
 minikube ip
 
-# Open in browser: http://<MINIKUBE-IP>:30100
-# Bijvoorbeeld: http://192.168.49.2:30100
+# Open in browser: http://<MINIKUBE-IP>:32500
+# Bijvoorbeeld: http://192.168.49.2:32500
 
 # Of met curl
-curl http://$(minikube ip):30100
+curl http://$(minikube ip):32500
 ```
 
 ### Methode 3: Port Forwarding
@@ -815,8 +993,8 @@ curl http://$(minikube ip):30100
 Port forwarding stuurt traffic van je localhost naar een pod of service.
 
 ```bash
-# Forward naar service
-kubectl port-forward service/webapp-service 8080:3000
+# Forward naar frontend service
+kubectl port-forward service/frontend-service 8080:3000
 
 # Open browser op: http://localhost:8080
 ```
@@ -825,7 +1003,7 @@ kubectl port-forward service/webapp-service 8080:3000
 
 ```bash
 # Haal pod naam op
-POD_NAME=$(kubectl get pods -l app=webapp -o jsonpath='{.items[0].metadata.name}')
+POD_NAME=$(kubectl get pods -l app=frontend -o jsonpath='{.items[0].metadata.name}')
 
 # Forward naar pod
 kubectl port-forward $POD_NAME 8080:3000
@@ -872,67 +1050,91 @@ kubectl get pods -n ingress-nginx
 **Maak Ingress resource:**
 
 ```yaml
-# webapp-ingress.yaml
+# frontend-ingress.yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: webapp-ingress
+  name: frontend-ingress
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
   rules:
-    - host: webapp.local
+    - host: petshelter.local
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: webapp-service
+                name: frontend-service
                 port:
                   number: 3000
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend-service
+                port:
+                  number: 5000
 ```
 
 **Apply Ingress:**
 
 ```bash
-kubectl apply -f webapp-ingress.yaml
+kubectl apply -f frontend-ingress.yaml
 
 # Voeg toe aan /etc/hosts
-echo "$(minikube ip) webapp.local" | sudo tee -a /etc/hosts
+echo "$(minikube ip) petshelter.local" | sudo tee -a /etc/hosts
 
-# Open browser: http://webapp.local
+# Open browser: http://petshelter.local
 ```
 
 ### De Applicatie Gebruiken
 
-Zodra je de webapp hebt geopend:
+Zodra je de Pet Shelter applicatie hebt geopend:
 
-1. **Bekijk User Profile**
+1. **Bekijk Pet Lijst**
 
-   - Standaard data: Anna Smith
-   - Email: anna.smith@example.com
-   - Interests: coding
+   - Je ziet alle pets in de shelter
+   - De backend seeded automatisch enkele voorbeeld pets bij eerste start
 
-2. **Edit Profile**
+2. **Voeg Nieuwe Pet Toe**
 
-   - Klik op "Edit Profile"
-   - Wijzig naam, email, of interests
-   - Klik "Update Profile"
+   - Vul het formulier in:
+     - Naam (bijv. "Max")
+     - Soort (bijv. "Dog")
+     - Leeftijd (bijv. "3")
+   - Klik "Add Pet"
 
 3. **Data wordt opgeslagen in MongoDB**
 
-   - Profile updates worden opgeslagen
-   - Refresh pagina om persistente data te zien
+   - Nieuwe pets worden opgeslagen in de database
+   - Refresh pagina om alle pets te zien (inclusief nieuwe)
 
-4. **Test de Database Connectie**
+4. **Test de Backend API**
 
    ```bash
-   # Bekijk logs van webapp pod
-   kubectl logs -l app=webapp
+   # Port forward naar backend
+   kubectl port-forward service/backend-service 5000:5000
+   
+   # In andere terminal, test API
+   curl http://localhost:5000/api/pets
+   
+   # Output: JSON array met alle pets
+   ```
 
-   # Je zou moeten zien: "app listening on port 3000!"
+5. **Bekijk Backend Logs**
+
+   ```bash
+   # Bekijk logs van backend pod
+   kubectl logs -l app=backend
+
+   # Je zou moeten zien:
+   # "Connecting to MongoDB..."
+   # "Server running on port 5000"
+   # "Connected to MongoDB"
+   # "Database seeded with initial pets"
    ```
 
 ---
@@ -951,8 +1153,9 @@ kubectl get pods
 kubectl get pods -o wide
 
 # Pods van specifieke app
-kubectl get pods -l app=webapp
-kubectl get pods -l app=mongo
+kubectl get pods -l app=frontend
+kubectl get pods -l app=backend
+kubectl get pods -l app=mongodbdb
 
 # Pods in real-time volgen
 kubectl get pods -w
@@ -971,10 +1174,12 @@ kubectl get pod <pod-name> -o yaml
 kubectl get svc
 
 # Service details
-kubectl describe svc webapp-service
+kubectl describe svc frontend-service
+kubectl describe svc backend-service
 
 # Service endpoints (welke pods worden geraakt)
-kubectl get endpoints webapp-service
+kubectl get endpoints frontend-service
+kubectl get endpoints backend-service
 ```
 
 #### Deployments Inspecteren
@@ -984,13 +1189,14 @@ kubectl get endpoints webapp-service
 kubectl get deployments
 
 # Deployment details
-kubectl describe deployment webapp-deployment
+kubectl describe deployment frontend-deployment
+kubectl describe deployment backend-deployment
 
 # Deployment rollout status
-kubectl rollout status deployment/webapp-deployment
+kubectl rollout status deployment/frontend-deployment
 
 # Deployment geschiedenis
-kubectl rollout history deployment/webapp-deployment
+kubectl rollout history deployment/backend-deployment
 ```
 
 ### Logs Bekijken
@@ -999,6 +1205,10 @@ kubectl rollout history deployment/webapp-deployment
 # Logs van een pod
 kubectl logs <pod-name>
 
+# Logs van backend/frontend via label
+kubectl logs -l app=backend
+kubectl logs -l app=frontend
+
 # Logs live volgen (zoals tail -f)
 kubectl logs -f <pod-name>
 
@@ -1006,7 +1216,7 @@ kubectl logs -f <pod-name>
 kubectl logs <pod-name> --previous
 
 # Logs van alle pods met label
-kubectl logs -l app=webapp --all-containers=true
+kubectl logs -l app=backend --all-containers=true
 
 # Laatste 50 regels
 kubectl logs <pod-name> --tail=50
@@ -1019,15 +1229,15 @@ kubectl logs <pod-name> --timestamps
 
 ```bash
 # WebApp logs
-POD=$(kubectl get pods -l app=webapp -o jsonpath='{.items[0].metadata.name}')
+POD=$(kubectl get pods -l app=frontend -o jsonpath='{.items[0].metadata.name}')
 kubectl logs $POD
 
 # MongoDB logs
-POD=$(kubectl get pods -l app=mongo -o jsonpath='{.items[0].metadata.name}')
+POD=$(kubectl get pods -l app=mongodb -o jsonpath='{.items[0].metadata.name}')
 kubectl logs $POD
 
-# Follow webapp logs
-kubectl logs -f -l app=webapp
+# Follow frontend logs
+kubectl logs -f -l app=frontend
 ```
 
 ### In Pods Executen
@@ -1049,8 +1259,8 @@ kubectl exec -it <pod-name> -c <container-name> -- /bin/sh
 **Praktische voorbeelden:**
 
 ```bash
-# Shell in webapp pod
-POD=$(kubectl get pods -l app=webapp -o jsonpath='{.items[0].metadata.name}')
+# Shell in frontend pod
+POD=$(kubectl get pods -l app=frontend -o jsonpath='{.items[0].metadata.name}')
 kubectl exec -it $POD -- /bin/sh
 
 # In de pod:
@@ -1060,31 +1270,31 @@ kubectl exec -it $POD -- /bin/sh
 # exit
 
 # Shell in MongoDB pod
-POD=$(kubectl get pods -l app=mongo -o jsonpath='{.items[0].metadata.name}')
+POD=$(kubectl get pods -l app=mongodb -o jsonpath='{.items[0].metadata.name}')
 kubectl exec -it $POD -- /bin/bash
 
 # In de pod (MongoDB CLI):
-# mongosh -u mongouser -p mongopassword
+# mongosh -u admin -p password
 # show dbs
-# use my-db
-# db.users.find()
+# use petshelter
+# db.pets.find()
 # exit
 ```
 
 ### Database Connectie Testen
 
 ```bash
-# Test MongoDB connectie vanuit webapp pod
-POD=$(kubectl get pods -l app=webapp -o jsonpath='{.items[0].metadata.name}')
+# Test MongoDB connectie vanuit frontend pod
+POD=$(kubectl get pods -l app=frontend -o jsonpath='{.items[0].metadata.name}')
 
 # Check environment variables
-kubectl exec $POD -- env | grep -E 'USER_NAME|USER_PWD|DB_URL'
+kubectl exec $POD -- env | grep -E 'MONGO'
 
 # Test DNS resolution
-kubectl exec $POD -- nslookup mongo-service
+kubectl exec $POD -- nslookup mongodb-service
 
 # Test MongoDB poort (vereist nc)
-kubectl exec $POD -- nc -zv mongo-service 27017
+kubectl exec $POD -- nc -zv mongodb-service 27017
 ```
 
 ### Events Bekijken
@@ -1164,7 +1374,7 @@ kubectl get configmap mongo-config -o yaml
 ```bash
 $ kubectl get pods
 NAME                                 READY   STATUS    RESTARTS   AGE
-webapp-deployment-xyz               0/1     Pending   0          2m
+frontend-deployment-xyz               0/1     Pending   0          2m
 ```
 
 **Diagnose:**
@@ -1200,7 +1410,7 @@ kubectl get events --sort-by='.lastTimestamp'
 ```bash
 $ kubectl get pods
 NAME                                 READY   STATUS             RESTARTS   AGE
-webapp-deployment-xyz               0/1     CrashLoopBackOff   5          5m
+frontend-deployment-xyz               0/1     CrashLoopBackOff   5          5m
 ```
 
 **Diagnose:**
@@ -1226,14 +1436,14 @@ kubectl describe pod <pod-name>
 
 ```bash
 # Check MongoDB eerst
-kubectl get pods -l app=mongo
+kubectl get pods -l app=mongodb
 
 # Als MongoDB niet running is, debug MongoDB eerst
-kubectl logs -l app=mongo
+kubectl logs -l app=mongodb
 
-# Check environment variables in webapp
-POD=$(kubectl get pods -l app=webapp -o jsonpath='{.items[0].metadata.name}')
-kubectl exec $POD -- env | grep -E 'USER_NAME|USER_PWD|DB_URL'
+# Check environment variables in frontend
+POD=$(kubectl get pods -l app=frontend -o jsonpath='{.items[0].metadata.name}')
+kubectl exec $POD -- env | grep -E 'MONGO'
 
 # Check of Secret bestaat
 kubectl get secret mongo-secret
@@ -1244,7 +1454,7 @@ kubectl get configmap mongo-config
 kubectl describe configmap mongo-config
 
 # Herstart deployment
-kubectl rollout restart deployment/webapp-deployment
+kubectl rollout restart deployment/frontend-deployment
 ```
 
 #### 3. Cannot Connect to MongoDB
@@ -1258,32 +1468,32 @@ kubectl rollout restart deployment/webapp-deployment
 
 ```bash
 # Check MongoDB pod status
-kubectl get pods -l app=mongo
+kubectl get pods -l app=mongodb
 
 # Check MongoDB service
-kubectl get svc mongo-service
-kubectl describe svc mongo-service
+kubectl get svc mongodb-service
+kubectl describe svc mongodb-service
 
 # Check endpoints
-kubectl get endpoints mongo-service
+kubectl get endpoints mongodb-service
 ```
 
 **Oplossing:**
 
 ```bash
 # Verify MongoDB is running
-kubectl logs -l app=mongo
+kubectl logs -l app=mongodb
 
-# Test DNS from webapp pod
-POD=$(kubectl get pods -l app=webapp -o jsonpath='{.items[0].metadata.name}')
-kubectl exec $POD -- nslookup mongo-service
+# Test DNS from frontend pod
+POD=$(kubectl get pods -l app=frontend -o jsonpath='{.items[0].metadata.name}')
+kubectl exec $POD -- nslookup mongodb-service
 
 # Check if MongoDB port is accessible
-kubectl exec $POD -- nc -zv mongo-service 27017
+kubectl exec $POD -- nc -zv mongodb-service 27017
 
 # If service has no endpoints, check selector
-kubectl get svc mongo-service -o yaml | grep -A 5 selector
-kubectl get pods -l app=mongo --show-labels
+kubectl get svc mongodb-service -o yaml | grep -A 5 selector
+kubectl get pods -l app=mongodb --show-labels
 
 # Recreate MongoDB if needed
 kubectl delete -f mongo.yaml
@@ -1294,7 +1504,7 @@ kubectl apply -f mongo.yaml
 
 **Symptomen:**
 
-- Cannot access webapp via `http://<minikube-ip>:30100`
+- Cannot access frontend via `http://<minikube-ip>:32500`
 - Browser shows "Connection refused" of "Timeout"
 
 **Diagnose:**
@@ -1304,10 +1514,10 @@ kubectl apply -f mongo.yaml
 minikube status
 
 # Check service exists
-kubectl get svc webapp-service
+kubectl get svc frontend-service
 
 # Check if pods are running
-kubectl get pods -l app=webapp
+kubectl get pods -l app=frontend
 ```
 
 **Oplossingen:**
@@ -1316,7 +1526,7 @@ kubectl get pods -l app=webapp
 
 ```bash
 # Easiest solution
-minikube service webapp-service
+minikube service frontend-service
 
 # Dit opent automatisch de browser
 ```
@@ -1325,7 +1535,7 @@ minikube service webapp-service
 
 ```bash
 # Als minikube service niet werkt
-kubectl port-forward svc/webapp-service 8080:3000
+kubectl port-forward svc/frontend-service 8080:3000
 
 # Open browser: http://localhost:8080
 ```
@@ -1337,17 +1547,17 @@ kubectl port-forward svc/webapp-service 8080:3000
 minikube ip
 
 # Verify nodePort
-kubectl get svc webapp-service -o yaml | grep nodePort
+kubectl get svc frontend-service -o yaml | grep nodePort
 
 # Test met curl
-curl http://$(minikube ip):30100
+curl http://$(minikube ip):32500
 
 # Check firewall rules (macOS)
 sudo pfctl -s all | grep 30100
 
 # Check docker network (if using docker driver)
 docker ps | grep minikube
-docker exec minikube curl localhost:30100
+docker exec minikube curl localhost:32500
 ```
 
 #### 5. Image Pull Errors
@@ -1357,14 +1567,14 @@ docker exec minikube curl localhost:30100
 ```bash
 $ kubectl get pods
 NAME                                 READY   STATUS         RESTARTS   AGE
-webapp-deployment-xyz               0/1     ImagePullErr   0          2m
+frontend-deployment-xyz               0/1     ImagePullErr   0          2m
 ```
 
 **Diagnose:**
 
 ```bash
 kubectl describe pod <pod-name>
-# Look for: Failed to pull image "dimilan/k8s-demo-app:v1.0"
+# Look for: Failed to pull image "dimilan/pet-shelter-frontend:v1.0"
 ```
 
 **Mogelijke oorzaken:**
@@ -1378,20 +1588,20 @@ kubectl describe pod <pod-name>
 
 ```bash
 # Verify image exists on Docker Hub
-# https://hub.docker.com/r/dimilan/k8s-demo-app
+# https://hub.docker.com/r/dimilan/pet-shelter-frontend
 
 # Pull image manually naar minikube
 minikube ssh
-docker pull dimilan/k8s-demo-app:v1.0
+docker pull dimilan/pet-shelter-frontend:v1.0
 exit
 
 # Of bouw image lokaal
 eval $(minikube docker-env)
 cd nodedemoapp/app
-docker build -t k8s-demo-app:local .
+docker build -t pet-shelter-frontend:local .
 
-# Update webapp.yaml om lokale image te gebruiken
-# image: k8s-demo-app:local
+# Update frontend-deployment.yaml om lokale image te gebruiken
+# image: pet-shelter-frontend:local
 # imagePullPolicy: Never
 ```
 
@@ -1421,12 +1631,12 @@ kubectl delete secret mongo-secret
 
 # Maak nieuwe secret
 kubectl create secret generic mongo-secret \
-  --from-literal=mongo-user=mongouser \
-  --from-literal=mongo-password=mongopassword
+  --from-literal=mongo-user=admin \
+  --from-literal=mongo-password=password
 
 # Herstart deployments
-kubectl rollout restart deployment/mongo-deployment
-kubectl rollout restart deployment/webapp-deployment
+kubectl rollout restart deployment/mongodb-deployment
+kubectl rollout restart deployment/frontend-deployment
 ```
 
 #### 7. Persistent Data Loss
@@ -1500,25 +1710,25 @@ Print deze checklist voor snelle troubleshooting:
 
 # 5. Check Connectivity
 □ kubectl exec <pod> -- env | grep MONGO
-□ kubectl exec <pod> -- nslookup mongo-service
-□ kubectl exec <pod> -- nc -zv mongo-service 27017
+□ kubectl exec <pod> -- nslookup mongodb-service
+□ kubectl exec <pod> -- nc -zv mongodb-service 27017
 
 # 6. Check Events
 □ kubectl get events --sort-by='.lastTimestamp'
 
 # 7. Access Application
-□ minikube service webapp-service
-□ kubectl port-forward svc/webapp-service 8080:3000
+□ minikube service frontend-service
+□ kubectl port-forward svc/frontend-service 8080:3000
 ```
 
 ### Useful Debug One-Liners
 
 ```bash
-# Get webapp pod name
-kubectl get pods -l app=webapp -o jsonpath='{.items[0].metadata.name}'
+# Get frontend pod name
+kubectl get pods -l app=frontend -o jsonpath='{.items[0].metadata.name}'
 
 # Get MongoDB pod name
-kubectl get pods -l app=mongo -o jsonpath='{.items[0].metadata.name}'
+kubectl get pods -l app=mongodb -o jsonpath='{.items[0].metadata.name}'
 
 # Check all pod statuses
 kubectl get pods -o custom-columns=NAME:.metadata.name,STATUS:.status.phase,READY:.status.containerStatuses[0].ready
@@ -1529,8 +1739,8 @@ minikube service list
 # Watch all resources
 watch kubectl get all
 
-# Get logs from all webapp pods
-kubectl logs -l app=webapp --all-containers=true -f
+# Get logs from all frontend pods
+kubectl logs -l app=frontend --all-containers=true -f
 
 # Quick health check
 kubectl get pods && kubectl get svc && echo "---" && kubectl top pods 2>/dev/null || echo "Metrics not ready"
@@ -1543,60 +1753,60 @@ kubectl get pods && kubectl get svc && echo "---" && kubectl top pods 2>/dev/nul
 ### Deployment Scaling
 
 ```bash
-# Scale webapp
-kubectl scale deployment webapp-deployment --replicas=3
+# Scale frontend
+kubectl scale deployment frontend-deployment --replicas=3
 
 # Verify scaling
-kubectl get pods -l app=webapp
+kubectl get pods -l app=frontend
 
 # Check multiple pods load balancing
-for i in {1..10}; do curl http://$(minikube ip):30100; done
+for i in {1..10}; do curl http://$(minikube ip):32500; done
 ```
 
 ### Rolling Updates
 
 ```bash
 # Update image
-kubectl set image deployment/webapp-deployment webapp=dimilan/k8s-demo-app:v2.0
+kubectl set image deployment/frontend-deployment webapp=dimilan/pet-shelter-frontend:v2.0
 
 # Check rollout status
-kubectl rollout status deployment/webapp-deployment
+kubectl rollout status deployment/frontend-deployment
 
 # Check rollout history
-kubectl rollout history deployment/webapp-deployment
+kubectl rollout history deployment/frontend-deployment
 
 # Rollback bij problemen
-kubectl rollout undo deployment/webapp-deployment
+kubectl rollout undo deployment/frontend-deployment
 
 # Rollback naar specifieke revisie
-kubectl rollout undo deployment/webapp-deployment --to-revision=1
+kubectl rollout undo deployment/frontend-deployment --to-revision=1
 ```
 
 ### Resource Updates
 
 ```bash
 # Update resource via YAML edit
-kubectl edit deployment webapp-deployment
+kubectl edit deployment frontend-deployment
 
 # Of update YAML file en apply
-kubectl apply -f webapp.yaml
+kubectl apply -f frontend-deployment.yaml
 
 # Restart deployment (zonder image change)
-kubectl rollout restart deployment/webapp-deployment
+kubectl rollout restart deployment/frontend-deployment
 ```
 
 ### Cleanup
 
 ```bash
 # Delete specific resources
-kubectl delete -f webapp.yaml
+kubectl delete -f frontend-deployment.yaml
 kubectl delete -f mongo.yaml
 kubectl delete -f mongo-config.yaml
 kubectl delete -f mongo-secret.yaml
 
 # Delete by name
-kubectl delete deployment webapp-deployment
-kubectl delete service webapp-service
+kubectl delete deployment frontend-deployment
+kubectl delete service frontend-service
 
 # Delete alles in namespace
 kubectl delete all --all
@@ -1643,7 +1853,7 @@ kubectl create namespace development
 kubectl apply -f mongo-secret.yaml -n development
 kubectl apply -f mongo-config.yaml -n development
 kubectl apply -f mongo.yaml -n development
-kubectl apply -f webapp.yaml -n development
+kubectl apply -f frontend-deployment.yaml -n development
 
 # Alle resources in namespace
 kubectl get all -n development
@@ -1659,8 +1869,8 @@ kubectl delete namespace development
 kubectl get pods --show-labels
 
 # Filter op label
-kubectl get pods -l app=webapp
-kubectl get pods -l app=mongo
+kubectl get pods -l app=frontend
+kubectl get pods -l app=mongodb
 
 # Meerdere labels
 kubectl get pods -l 'app in (webapp,mongo)'
@@ -1674,15 +1884,15 @@ kubectl label pods <pod-name> environment-
 
 ### Health Checks Toevoegen (Production Ready)
 
-Update `webapp.yaml` met health checks:
+Update frontend deployment met health checks:
 
 ```yaml
 spec:
   template:
     spec:
       containers:
-        - name: webapp
-          image: dimilan/k8s-demo-app:v1.0
+        - name: frontend
+          image: dimilan/pet-shelter-frontend:v1.0
           ports:
             - containerPort: 3000
           # Liveness probe: restart pod als deze faalt
@@ -1704,8 +1914,8 @@ spec:
 Apply updates:
 
 ```bash
-kubectl apply -f webapp.yaml
-kubectl rollout status deployment/webapp-deployment
+kubectl apply -f frontend-deployment.yaml
+kubectl rollout status deployment/frontend-deployment
 ```
 
 ---
@@ -1886,11 +2096,12 @@ Na het voltooien van deze tutorial kun je:
 ### Images
 
 - 🐳 [MongoDB op Docker Hub](https://hub.docker.com/_/mongo)
-- 🐳 [WebApp Image](https://hub.docker.com/r/dimilan/k8s-demo-app)
+- 🐳 [Pet Shelter Backend](https://hub.docker.com/r/dimilan/pet-shelter-backend)
+- 🐳 [Pet Shelter Frontend](https://hub.docker.com/r/dimilan/pet-shelter-frontend)
 
 ### Repository
 
-- 💻 [minikube-demo GitHub](https://github.com/MilanVives/minikube-demo)
+- 💻 [PetShelter-minimal GitHub](https://github.com/MilanVives/PetShelter-minimal)
 
 ---
 
@@ -1899,9 +2110,10 @@ Na het voltooien van deze tutorial kun je:
 Je hebt nu geleerd hoe je:
 
 - ✅ Minikube installeert en configureert
-- ✅ Een 2-tier applicatie deploy naar Kubernetes
-- ✅ Secrets en ConfigMaps gebruikt
-- ✅ Deployments en Services configureert
+- ✅ Een 3-tier Pet Shelter applicatie deploy naar Kubernetes
+- ✅ Docker images bouwt in Minikube's Docker daemon
+- ✅ Secrets en ConfigMaps gebruikt voor configuratie
+- ✅ Deployments en Services configureert voor frontend, backend en database
 - ✅ Services toegankelijk maakt via verschillende methoden
 - ✅ Applicaties monitort en debugt
 - ✅ Veelvoorkomende problemen oplost

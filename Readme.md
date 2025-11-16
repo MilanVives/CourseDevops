@@ -106,14 +106,14 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
 
 ### [Les 6c – Kubernetes met Minikube: Praktische Tutorial](06-Kubernetes/kubernetes-minikube.md)
 - **Minikube Setup**: installatie en configuratie op macOS, Linux, Windows
-- **2-Tier Applicatie**: Node.js webapp + MongoDB database deployment
+- **3-Tier Pet Shelter Applicatie**: Frontend (Express/HTML) + Backend (Node.js REST API) + MongoDB database deployment
 - **Secrets & ConfigMaps**: gevoelige data en configuratie management
-- **Deployments & Services**: complete applicatie orchestratie
+- **Deployments & Services**: complete applicatie orchestratie met frontend, backend en database tiers
 - **Service Toegang**: NodePort, port forwarding, minikube tunnel, ingress
 - **Monitoring & Debugging**: logs, events, resource usage, pod execution
 - **Troubleshooting**: veelvoorkomende problemen en oplossingen
 - **Praktische Workflow**: van lokale development tot volledige deployment
-- **Repository**: volledige working example met [minikube-demo](06-Kubernetes/minikube-demo/)
+- **Repository**: volledige working example met [PetShelter-minimal](https://github.com/MilanVives/PetShelter-minimal) in [minikube-demo](06-Kubernetes/minikube-demo/)
 
 ## [Les 7 – Helm Package Management](07-Helm/)
 

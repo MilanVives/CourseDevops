@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Shelter</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .pet { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+        input, button { margin: 5px; padding: 8px; }
+    </style>
+</head>
+<body>
+    <h1>Pet Shelter</h1>
+    
+    <div>
+        <h2>Add New Pet</h2>
+        <input type="text" id="name" placeholder="Name">
+        <input type="text" id="type" placeholder="Type (Dog/Cat)">
+        <input type="number" id="age" placeholder="Age">
+        <button onclick="addPet()">Add Pet</button>
+    </div>
+
+    <div>
+        <h2>All Pets</h2>
+        <div id="pets"></div>
+    </div>
+
+    <script>
+        const API_URL = '/api/pets';
+
+        async function loadPets() {
+            const response = await fetch(API_URL);
+            const pets = await response.json();
+            document.getElementById('pets').innerHTML = pets.map(pet => 
+                `<div class="pet">
+                    <strong>${pet.name}</strong> - ${pet.type}, ${pet.age} years old
+                </div>`
+            ).join('');
+        }
+
+        async function addPet() {
+            const name = document.getElementById('name').value;
+            const type = document.getElementById('type').value;
+            const age = document.getElementById('age').value;
+
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, type, age })
+            });
+
+            document.getElementById('name').value = '';
+            document.getElementById('type').value = '';
+            document.getElementById('age').value = '';
+            loadPets();
+        }
+
+        loadPets();
+    </script>
+</body>
+</html>
