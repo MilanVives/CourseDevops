@@ -43,27 +43,27 @@ Minikube is een tool die een single-node Kubernetes cluster lokaal op je machine
 │  │  ┌────────────────────────────────────────────────────┐  │  │
 │  │  │          Kubernetes Cluster (VM/Docker)            │  │  │
 │  │  │                                                    │  │  │
-│  │  │  ┌────────────┐  ┌────────────┐  ┌────────────┐   │  │  │
-│  │  │  │ Frontend   │  │  Backend   │  │  MongoDB   │   │  │  │
-│  │  │  │   Pod      │  │    Pod     │  │    Pod     │   │  │  │
-│  │  │  │ (Express)  │  │ (Node.js)  │  │ (Database) │   │  │  │
-│  │  │  │ Port: 3000 │  │ Port: 5000 │  │ Port:27017 │   │  │  │
-│  │  │  └────────────┘  └────────────┘  └────────────┘   │  │  │
-│  │  │        │               │               │          │  │  │
-│  │  │        └───────────────┴───────────────┘          │  │  │
+│  │  │  ┌────────────┐  ┌────────────┐  ┌────────────┐    │  │  │
+│  │  │  │ Frontend   │  │  Backend   │  │  MongoDB   │    │  │  │
+│  │  │  │   Pod      │  │    Pod     │  │    Pod     │    │  │  │
+│  │  │  │ (Express)  │  │ (Node.js)  │  │ (Database) │    │  │  │
+│  │  │  │ Port: 3000 │  │ Port: 5000 │  │ Port:27017 │    │  │  │
+│  │  │  └────────────┘  └────────────┘  └────────────┘    │  │  │
+│  │  │        │               │               │           │  │  │
+│  │  │        └───────────────┴───────────────┘           │  │  │
 │  │  │                                                    │  │  │
-│  │  │  ┌──────────────────────────────────────────┐     │  │  │
-│  │  │  │    Services & Networking                 │     │  │  │
-│  │  │  │  - frontend-service (NodePort:32500)     │     │  │  │
-│  │  │  │  - backend-service (ClusterIP:5000)      │     │  │  │
-│  │  │  │  - mongodb-service (ClusterIP:27017)     │     │  │  │
-│  │  │  └──────────────────────────────────────────┘     │  │  │
+│  │  │  ┌──────────────────────────────────────────┐      │  │  │
+│  │  │  │    Services & Networking                 │      │  │  │
+│  │  │  │  - frontend-service (NodePort:32500)     │      │  │  │
+│  │  │  │  - backend-service (ClusterIP:5000)      │      │  │  │
+│  │  │  │  - mongodb-service (ClusterIP:27017)     │      │  │  │
+│  │  │  └──────────────────────────────────────────┘      │  │  │
 │  │  │                                                    │  │  │
-│  │  │  ┌──────────────────────────────────────────┐     │  │  │
-│  │  │  │   ConfigMaps & Secrets                   │     │  │  │
-│  │  │  │  - mongodb-secret (credentials)          │     │  │  │
-│  │  │  │  - mongodb-configmap (database config)   │     │  │  │
-│  │  │  └──────────────────────────────────────────┘     │  │  │
+│  │  │  ┌──────────────────────────────────────────┐      │  │  │
+│  │  │  │   ConfigMaps & Secrets                   │      │  │  │
+│  │  │  │  - mongodb-secret (credentials)          │      │  │  │
+│  │  │  │  - mongodb-configmap (database config)   │      │  │  │
+│  │  │  └──────────────────────────────────────────┘      │  │  │
 │  │  └────────────────────────────────────────────────────┘  │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                          ▲                                     │
@@ -357,8 +357,8 @@ metadata:
   name: mongodb-secret
 type: Opaque
 data:
-  username: YWRtaW4=       # base64 encoded 'admin'
-  password: cGFzc3dvcmQ=   # base64 encoded 'password'
+  username: YWRtaW4= # base64 encoded 'admin'
+  password: cGFzc3dvcmQ= # base64 encoded 'password'
 ```
 
 **Base64 encoding uitleg:**
@@ -944,7 +944,8 @@ kubectl apply -f k8s/frontend-deployment.yaml
 # Of gebruik de hele k8s directory
 kubectl apply -f k8s/
 ```
-```
+
+````
 
 ---
 
@@ -959,7 +960,7 @@ Dit is de makkelijkste manier om toegang te krijgen tot de NodePort service.
 minikube service frontend-service
 
 # Dit opent automatisch je browser op het juiste adres
-```
+````
 
 **Wat gebeurt er?**
 
@@ -1117,10 +1118,10 @@ Zodra je de Pet Shelter applicatie hebt geopend:
    ```bash
    # Port forward naar backend
    kubectl port-forward service/backend-service 5000:5000
-   
+
    # In andere terminal, test API
    curl http://localhost:5000/api/pets
-   
+
    # Output: JSON array met alle pets
    ```
 
