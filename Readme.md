@@ -117,45 +117,73 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
 
 ## [Les 7 – Helm Package Management](07-Helm/)
 
-- [Helm Tutorial](07-Helm/helm.md) - Kubernetes package management
+- [Helm Tutorial](07-Helm/helm.md) - Kubernetes package management fundamentals
+- [Helm PetShelter Migration](07-Helm/helm-petshelter.md) - Praktische migratie van Kubernetes naar Helm
 - **Onderwerpen:**
   - Kubernetes applicatie packaging en templating
   - Helm charts en custom chart development
   - Package management en versioning strategieën
   - Helm repositories en chart distribution
   - Complex deployments met Helm dependency management
+  - Stap-voor-stap migratie van PetShelter applicatie naar Helm
+  - Values.yaml configuratie en template development
+  - Helper templates en best practices
 
 ## [Les 8 – Ingress & Reverse Proxies](08-Ingress-and-Reverse-Proxies/)
 
-- [Ingress Controllers](08-Ingress-and-Reverse-Proxies/ingress.md) - Kubernetes ingress fundamentals
-- [Traefik Tutorial](08-Ingress-and-Reverse-Proxies/Traefik.md) - Modern reverse proxy met SSL
-- [Nginx Tutorial](08-Ingress-and-Reverse-Proxies/Nginx.md) - Klassieke reverse proxy setup
+- [Ingress Controllers](08-Ingress-and-Reverse-Proxies/ingress.md) - Complete Kubernetes ingress fundamentals
+- [Traefik Tutorial](08-Ingress-and-Reverse-Proxies/Traefik.md) - Modern reverse proxy met automatische SSL
+- [Nginx Tutorial](08-Ingress-and-Reverse-Proxies/Nginx.md) - Klassieke reverse proxy configuratie
+- [Traefik Examples](08-Ingress-and-Reverse-Proxies/traefik-examples/) - Praktische Traefik configuraties
+- [Nginx Examples](08-Ingress-and-Reverse-Proxies/nginx-examples/) - Praktische Nginx voorbeelden
 - **Onderwerpen:**
-  - Ingress controllers en routing
-  - Traefik als modern reverse proxy met automatische SSL certificates
-  - Nginx reverse proxy configuratie met port redirection
-  - Load balancing strategieën
-  - SSL/TLS certificate management (Let's Encrypt, manual certificates)
-  - External DNS en domain management
+  - Ingress controllers en routing mechanismen
+  - Kubernetes Ingress resources en controllers (NGINX, Traefik, HAProxy)
+  - Ingress architectuur en deployment patterns
+  - Traefik als modern reverse proxy met automatische SSL certificates (Let's Encrypt)
+  - Nginx reverse proxy configuratie met port redirection en upstream servers
+  - Load balancing strategieën en algoritmes
+  - SSL/TLS certificate management (automatisch en manueel)
+  - External DNS en domain management voor production
   - Container-naar-container proxy routing
+  - Path-based en host-based routing configuraties
+  - Health checks en monitoring van ingress traffic
+  - Best practices voor production ingress setups
 
 ## [Les 9 – CI/CD](09-CI-CD/)
 
+- [GitHub Actions Basics](09-CI-CD/github-actions.md) - GitHub Actions fundamentals en workflow syntax
 - [Complete Pipeline Example](09-CI-CD/Example-Pipeline.md) - GitHub Actions CI/CD voor frontend/backend deployment
+- [GitHub Container Registry (GHCR)](09-CI-CD/ga-with-ghcr.md) - Container images automatisch pushen naar GHCR
 - **Onderwerpen:**
-  - Complete GitHub Actions pipeline setup
-  - Docker image building en versioning
-  - Docker Hub registry management
-  - Automated deployment naar production servers
-  - SSH key en secrets management
-  - Docker Hub tokens en GitHub secrets configuratie
-  - Zero-downtime deployments met docker compose
-  - GitOps principes en workflow patterns
-  - ArgoCD voor declaratieve deployments
-  - Flux voor continuous delivery
-  - Infrastructure as Code in CI/CD pipelines
-  - Multi-environment deployment strategieën
-  - Canary deployments en blue-green patterns
+  - **GitHub Actions Fundamentals:**
+    - Workflow syntax en triggers (push, pull_request, schedule)
+    - Jobs, steps en actions marketplace
+    - Environment variables en secrets management
+    - Matrix builds voor multi-platform testing
+    - Artifact sharing tussen jobs
+  - **Complete CI/CD Pipeline:**
+    - Docker image building en versioning strategieën
+    - Docker Hub registry management en authentication
+    - Automated deployment naar production servers via SSH
+    - SSH key configuratie en GitHub secrets setup
+    - Zero-downtime deployments met docker compose
+    - Environment-specific configurations
+  - **GitHub Container Registry (GHCR):**
+    - Personal Access Token (PAT) configuratie voor GHCR
+    - Docker login naar ghcr.io en image naming conventions
+    - Container images bouwen en pushen naar GHCR
+    - GitHub Actions workflow voor automatische GHCR deployments
+    - Package visibility management (public/private)
+    - Troubleshooting GHCR authentication en build errors
+  - **Advanced CI/CD Concepts:**
+    - GitOps principes en workflow patterns
+    - ArgoCD voor declaratieve Kubernetes deployments
+    - Flux voor continuous delivery automation
+    - Infrastructure as Code in CI/CD pipelines
+    - Multi-environment deployment strategieën (dev, staging, prod)
+    - Canary deployments en blue-green deployment patterns
+    - Rollback strategieën en disaster recovery
 
 ## [Les 10 – Service Mesh & Microservices](10-Service-Mesh-and-Microservices/)
 
