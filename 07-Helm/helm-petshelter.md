@@ -242,7 +242,6 @@ petshelter-chart/
 Open `Chart.yaml` en pas aan:
 
 ```yaml
-{% raw %}
 apiVersion: v2
 name: petshelter
 description: A Helm chart for PetShelter 3-tier application (MongoDB, Node.js Backend, Express Frontend)
@@ -265,7 +264,6 @@ home: https://github.com/MilanVives/PetShelter-minimal
 
 sources:
   - https://github.com/MilanVives/PetShelter-minimal
-{% endraw %}
 ```
 
 **Uitleg van de velden:**
@@ -314,7 +312,6 @@ Laten we identificeren welke waarden we willen parametrizeren:
 Vervang de inhoud van `values.yaml`:
 
 ```yaml
-{% raw %}
 # Global settings
 global:
   nameOverride: ""
@@ -421,7 +418,6 @@ ingress:
     # - secretName: petshelter-tls
     #   hosts:
     #     - petshelter.local
-{% endraw %}
 ```
 
 **Uitleg van de structuur:**
@@ -443,7 +439,6 @@ ingress:
 Maak `templates/mongodb/secret.yaml`:
 
 ```yaml
-{% raw %}
 {{- if .Values.mongodb.enabled }}
 {{- if .Values.mongodb.auth.enabled }}
 apiVersion: v1
@@ -460,9 +455,7 @@ data:
   password: {{ .Values.mongodb.auth.rootPassword | b64enc | quote }}
 {{- end }}
 {{- end }}
-{% endraw %}
 ```
-{% raw %}
 
 **Uitleg:**
 - `{{- if .Values.mongodb.enabled }}`: Alleen aanmaken als MongoDB enabled is
@@ -475,10 +468,7 @@ data:
 
 Maak `templates/mongodb/configmap.yaml`:
 
-{% endraw %}
-{% endraw %}
 ```yaml
-{% raw %}
 {{- if .Values.mongodb.enabled }}
 apiVersion: v1
 kind: ConfigMap
@@ -492,7 +482,6 @@ data:
   database-port: {{ .Values.mongodb.service.port | quote }}
   database-name: {{ .Values.mongodb.auth.database | quote }}
 {{- end }}
-{% endraw %}
 ```
 
 **Uitleg:**
@@ -504,7 +493,6 @@ data:
 Maak `templates/mongodb/deployment.yaml`:
 
 ```yaml
-{% raw %}
 {{- if .Values.mongodb.enabled }}
 apiVersion: apps/v1
 kind: Deployment
@@ -551,9 +539,7 @@ spec:
           {{- toYaml . | nindent 10 }}
         {{- end }}
 {{- end }}
-{% endraw %}
 ```
-{% raw %}
 
 **Uitleg:**
 - `{{- with .Values.mongodb.resources }}`: Alleen resources block toevoegen als gedefinieerd
@@ -564,10 +550,7 @@ spec:
 
 Maak `templates/mongodb/service.yaml`:
 
-{% endraw %}
-{% endraw %}
 ```yaml
-{% raw %}
 {{- if .Values.mongodb.enabled }}
 apiVersion: v1
 kind: Service
@@ -587,7 +570,6 @@ spec:
     {{- include "petshelter.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: mongodb
 {{- end }}
-{% endraw %}
 ```
 
 ---
@@ -599,7 +581,6 @@ spec:
 Maak `templates/backend/deployment.yaml`:
 
 ```yaml
-{% raw %}
 {{- if .Values.backend.enabled }}
 apiVersion: apps/v1
 kind: Deployment
@@ -663,7 +644,6 @@ spec:
           {{- toYaml . | nindent 10 }}
         {{- end }}
 {{- end }}
-{% endraw %}
 ```
 
 **Uitleg:**
@@ -676,7 +656,6 @@ spec:
 Maak `templates/backend/service.yaml`:
 
 ```yaml
-{% raw %}
 {{- if .Values.backend.enabled }}
 apiVersion: v1
 kind: Service
@@ -696,7 +675,6 @@ spec:
     {{- include "petshelter.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: backend
 {{- end }}
-{% endraw %}
 ```
 
 ---
@@ -708,7 +686,6 @@ spec:
 Maak `templates/frontend/deployment.yaml`:
 
 ```yaml
-{% raw %}
 {{- if .Values.frontend.enabled }}
 apiVersion: apps/v1
 kind: Deployment
@@ -747,7 +724,6 @@ spec:
           {{- toYaml . | nindent 10 }}
         {{- end }}
 {{- end }}
-{% endraw %}
 ```
 
 **Uitleg:**
@@ -759,7 +735,6 @@ spec:
 Maak `templates/frontend/service.yaml`:
 
 ```yaml
-{% raw %}
 {{- if .Values.frontend.enabled }}
 apiVersion: v1
 kind: Service
@@ -782,9 +757,7 @@ spec:
     {{- include "petshelter.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: frontend
 {{- end }}
-{% endraw %}
 ```
-{% raw %}
 
 **Uitleg:**
 - `{{- if and (eq .Values.frontend.service.type "NodePort") .Values.frontend.service.nodePort }}`: 
@@ -798,10 +771,7 @@ spec:
 
 Vervang de inhoud van `templates/_helpers.tpl`:
 
-{% endraw %}
-{% endraw %}
 ```yaml
-{% raw %}
 {{/*
 Expand the name of the chart.
 */}}
@@ -862,7 +832,6 @@ MongoDB connection string helper
 {{- printf "mongodb://%s-mongodb-service:%d/%s" (include "petshelter.fullname" .) (int .Values.mongodb.service.port) .Values.mongodb.auth.database -}}
 {{- end -}}
 {{- end -}}
-{% endraw %}
 ```
 
 **Uitleg van de helpers:**
@@ -1100,7 +1069,6 @@ kubectl logs -l app.kubernetes.io/component=frontend
 Maak `values-dev.yaml`:
 
 ```yaml
-{% raw %}
 # Development Environment Configuration
 
 # MongoDB - lighter resources for dev
@@ -1166,7 +1134,6 @@ frontend:
 # Ingress disabled in dev
 ingress:
   enabled: false
-{% endraw %}
 ```
 
 ### 9.2 Staging Values
@@ -1174,7 +1141,6 @@ ingress:
 Maak `values-staging.yaml`:
 
 ```yaml
-{% raw %}
 # Staging Environment Configuration
 
 # MongoDB - production-like setup
@@ -1252,7 +1218,6 @@ ingress:
     - secretName: petshelter-staging-tls
       hosts:
         - petshelter-staging.example.com
-{% endraw %}
 ```
 
 ### 9.3 Production Values
@@ -1260,7 +1225,6 @@ ingress:
 Maak `values-prod.yaml`:
 
 ```yaml
-{% raw %}
 # Production Environment Configuration
 
 # MongoDB - high availability
@@ -1348,7 +1312,6 @@ ingress:
     - secretName: petshelter-prod-tls
       hosts:
         - petshelter.example.com
-{% endraw %}
 ```
 
 ### 9.4 Deploy naar Verschillende Environments
