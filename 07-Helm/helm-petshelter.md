@@ -456,6 +456,7 @@ data:
 {{- end }}
 {{- end }}
 ```
+{% raw %}
 
 **Uitleg:**
 - `{{- if .Values.mongodb.enabled }}`: Alleen aanmaken als MongoDB enabled is
@@ -468,6 +469,7 @@ data:
 
 Maak `templates/mongodb/configmap.yaml`:
 
+{% endraw %}
 ```yaml
 {{- if .Values.mongodb.enabled }}
 apiVersion: v1
@@ -540,6 +542,7 @@ spec:
         {{- end }}
 {{- end }}
 ```
+{% raw %}
 
 **Uitleg:**
 - `{{- with .Values.mongodb.resources }}`: Alleen resources block toevoegen als gedefinieerd
@@ -550,6 +553,7 @@ spec:
 
 Maak `templates/mongodb/service.yaml`:
 
+{% endraw %}
 ```yaml
 {{- if .Values.mongodb.enabled }}
 apiVersion: v1
@@ -758,6 +762,7 @@ spec:
     app.kubernetes.io/component: frontend
 {{- end }}
 ```
+{% raw %}
 
 **Uitleg:**
 - `{{- if and (eq .Values.frontend.service.type "NodePort") .Values.frontend.service.nodePort }}`: 
@@ -771,6 +776,7 @@ spec:
 
 Vervang de inhoud van `templates/_helpers.tpl`:
 
+{% endraw %}
 ```yaml
 {{/*
 Expand the name of the chart.
