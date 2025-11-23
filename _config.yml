@@ -3,7 +3,7 @@ theme: jekyll-theme-primer
 
 # Exclude files that contain Helm template syntax that conflicts with Liquid
 exclude:
-  - 07-Helm/helm-petshelter.md
+  - 07-Helm/
   - vendor
   - .bundle
   - Gemfile
