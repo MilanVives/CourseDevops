@@ -17,6 +17,22 @@ Meer info: [https://creativecommons.org/licenses/by/4.0/](https://creativecommon
 
 # Inhoudstafel
 
+## [Evaluatie](00-Assessment/)
+
+Dit vak wordt gebruikt voor twee klasgroepen, elk met hun eigen evaluatie:
+
+### [Devops & Cloud Computing](00-Assessment/Devops/)
+
+- [PE 1 – GitHub Classroom](00-Assessment/Devops/1-PE_GitHub-Classroom.md) - Uitnodiging accepteren en eerste commit pushen (pass/fail)
+- [PE 2 – Docker Compose](00-Assessment/Devops/2-PE_Compose-Devops.md) - Permanente evaluatieopdracht: drieservicetoepassing containeriseren met Docker Compose
+- [PE 3 – Minikube](00-Assessment/Devops/3-PE_Minikube-Devops.md) - Permanente evaluatieopdracht: deployment op Minikube
+- [Final Assessment (80%)](00-Assessment/Devops/4-Final-Assessment.md) - Stap-voor-stap cloud deployment: cluster, secrets, Helm, ingress/HTTPS, CI/CD, monitoring, bouwt verder op PE1-3
+- [Mondelinge Verdediging](00-Assessment/Devops/mondelinge-verdediging.md) - Eén verdediging aan het einde voor het volledige project - toetst begrip naast projectkwaliteit
+
+### [Cloud Infrastructure](00-Assessment/CloudInfrastructure/)
+
+*[Komt binnenkort]*
+
 ## [Les 1 – Docker Basics](01-Docker/)
 
 - [Docker Fundamentals](01-Docker/docker.md) - Introductie & Motivatie, Wat is Docker?, Containers vs VMs
