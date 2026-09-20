@@ -1,4 +1,4 @@
-# DevOps & Cloud Native – Cursusmateriaal
+# DevOps & Cloud Infrastructure – Cursusmateriaal
 
 ## Auteur
 
@@ -247,7 +247,7 @@ Dit vak wordt gebruikt voor twee klasgroepen, elk met hun eigen evaluatie:
 
 # Introductie
 
-Deze cursus **DevOps & Cloud Native** biedt een praktijkgerichte inleiding in de moderne manier van software ontwikkelen, uitrollen en beheren.  
+Deze cursus **DevOps & Cloud Infrastructure** biedt een praktijkgerichte inleiding in de moderne manier van software ontwikkelen, uitrollen en beheren.  
 
 We starten met **Docker** als basis van containerisatie, gevolgd door **Dockerfile** en **Docker Compose** voor multi-container applicaties. Vervolgens leren we **Docker Networking** voor complexe communicatie patronen.
 
@@ -264,7 +264,7 @@ Een belangrijke stap is **Infrastructure as Code (IAC)** met **Ansible** en **Te
 
 ### Voor wie?
 
-- Studenten en professionals die inzicht willen krijgen in **DevOps** en **Cloud Native development**.
+- Studenten en professionals die inzicht willen krijgen in **DevOps** en **Cloud Infrastructure**.
 - Basiskennis Linux en command line is een pluspunt.
 - Interesse in automatisering, cloud platforms en moderne development practices.
 - Voorbereiding op DevOps Engineer, Site Reliability Engineer of Cloud Infrastructure rollen.
