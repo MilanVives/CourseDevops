@@ -36,6 +36,7 @@ Dit vak wordt gebruikt voor twee klasgroepen, elk met hun eigen evaluatie:
 ## [Les 1 – Docker Basics](01-Docker/)
 
 - [Docker Fundamentals](01-Docker/docker.md) - Introductie & Motivatie, Wat is Docker?, Containers vs VMs
+- [Slides](01-Docker/docker-slides.md) - Marp-slidedeck versie voor in de les
 - [Praktische Oefeningen](01-Docker/oefeningen.md) - Hands-on labs en experimenteren
 - **Onderwerpen:**
   - Belangrijkste Docker commando's (`docker run`, `docker ps`, `docker stop`, `docker rm`)
