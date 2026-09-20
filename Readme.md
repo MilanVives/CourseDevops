@@ -213,8 +213,9 @@ Dit vak wordt gebruikt voor twee klasgroepen, elk met hun eigen evaluatie:
   - Circuit breakers en resilience patterns
   - Microservices observability en debugging
 
-## [Les 11 – Security & DevSecOps](11-Security-and-Devops/) *[Komt binnenkort]*
+## [Les 11 – Security & DevSecOps](11-Security-and-Devops/)
 
+- [Security & DevSecOps](11-Security-and-Devops/security-devops.md) - Container security, vulnerability scanning, Kubernetes security, Policy as Code
 - **Onderwerpen:**
   - Container security best practices
   - Image vulnerability scanning (Trivy, Snyk)
@@ -223,8 +224,9 @@ Dit vak wordt gebruikt voor twee klasgroepen, elk met hun eigen evaluatie:
   - Secrets management en encryption
   - Security monitoring en compliance automation
 
-## [Les 12 – Advanced Monitoring & Observability](12-Monitoring/) *[Komt binnenkort]*
+## [Les 12 – Advanced Monitoring & Observability](12-Monitoring/)
 
+- [Monitoring & Observability](12-Monitoring/monitoring-observability.md) - Prometheus, Grafana, Jaeger, APM, SLA/SLO/SLI
 - **Onderwerpen:**
   - Observability: metrics, logs, distributed tracing
   - Prometheus voor metrics collection en alerting
@@ -233,8 +235,9 @@ Dit vak wordt gebruikt voor twee klasgroepen, elk met hun eigen evaluatie:
   - Application Performance Monitoring (APM)
   - SLA/SLO/SLI definitie en monitoring
 
-## [Les 13 – Performance & Scalability](13-Scalability/) *[Komt binnenkort]*
+## [Les 13 – Performance & Scalability](13-Scalability/)
 
+- [Performance & Scalability](13-Scalability/performance-scalability.md) - Auto-scaling, load testing, capacity planning, disaster recovery
 - **Onderwerpen:**
   - Kubernetes auto-scaling: HPA, VPA, Cluster Autoscaler
   - Load testing strategieën (K6, Artillery)
@@ -242,6 +245,61 @@ Dit vak wordt gebruikt voor twee klasgroepen, elk met hun eigen evaluatie:
   - Resource management en capacity planning
   - Multi-cloud en hybrid cloud strategieën
   - Disaster recovery en business continuity planning
+
+## [Les 14 – Cloudflare](14-Cloudflare/) *[Komt binnenkort]*
+
+- **Onderwerpen:**
+  - Tunneling: Cloudflare Tunnel zonder open inbound poorten
+  - App security: WAF, rate limiting, DDoS-bescherming
+  - App login: Zero Trust Access (identity-based toegang zonder VPN)
+  - App deployment: DNS, SSL/TLS, Cloudflare Pages
+  - Workers: serverless functies op de edge
+
+## [Les 15 – Cloud Providers & Cloud Services](15-Cloud-Providers/) *[Komt binnenkort]*
+
+- **Onderwerpen:**
+  - Cloud computing basics: on-premise vs cloud, IaaS/PaaS/SaaS
+  - Overzicht cloudproviders: AWS, Azure, GCP, Linode, DigitalOcean, Oracle Cloud, Hetzner
+  - Kerninfrastructuur: compute, storage, networking, managed databases
+  - Regions, availability zones, kostenbeheer, shared responsibility model
+
+---
+
+# Curriculum per opleiding
+
+Dit vak wordt gebruikt voor twee opleidingen met elk hun eigen traject door de lessen hierboven. Zie ook [Evaluatie](00-Assessment/) — dat hoofdstuk (permanente evaluatie + eindopdracht) is **enkel voor Devops & Cloud Computing**.
+
+## Devops & Cloud Computing (B-VIV-V3R316)
+
+| # | Les | Verplicht/optioneel |
+|---|---|---|
+| 1 | [Docker Basics](01-Docker/) | Verplicht |
+| 2 | [Dockerfile](02-Dockerfile/) | Verplicht |
+| 3 | [Docker Compose](03-Compose/) | Verplicht |
+| 4 | [Docker Networking](04-Docker-networking/) | Verplicht |
+| 6 | [Kubernetes](06-Kubernetes/) | Verplicht |
+| 7 | [Helm](07-Helm/) | Verplicht |
+| 8 | [Ingress & Reverse Proxies](08-Ingress-and-Reverse-Proxies/) | Verplicht |
+| 14 | [Cloudflare](14-Cloudflare/) *(nieuw, nog te schrijven)* | Verplicht |
+| 9 | [CI/CD](09-CI-CD/) | Verplicht |
+| 12 | [Monitoring & Observability](12-Monitoring/) | Optioneel, indien tijd |
+
+> Evaluatie: zie [PE1-3 en Final Assessment](00-Assessment/Devops/).
+
+## Cloud Infrastructure (B-VIV-V3R449)
+
+| # | Les | Verplicht/optioneel |
+|---|---|---|
+| 15 | [Cloud Providers & Cloud Services](15-Cloud-Providers/) *(nieuw, nog te schrijven)* | Verplicht |
+| 5 | [Infrastructure as Code](05-IaC/) | Verplicht |
+| 6 | [Kubernetes](06-Kubernetes/) | Verplicht |
+| 7 | [Helm](07-Helm/) | Verplicht |
+| 8 | [Ingress & Reverse Proxies](08-Ingress-and-Reverse-Proxies/) | Verplicht |
+| 10 | [Service Mesh & Microservices](10-Service-Mesh-and-Microservices/) | Optioneel, indien tijd |
+| 11 | [Security & DevSecOps](11-Security-and-Devops/) | Optioneel, indien tijd |
+| 12 | [Monitoring & Observability](12-Monitoring/) | Optioneel, indien tijd |
+
+> Evaluatie: zie [00-Assessment/CloudInfrastructure](00-Assessment/CloudInfrastructure/) *(nog in te vullen)*.
 
 ---
 
