@@ -1,10 +1,10 @@
-# 🎤 Mondelinge Verdediging — Devops & Cloud Computing
+# Mondelinge Verdediging — Devops & Cloud Computing
 
 > ⚠️ **Doelgroep:** deze evaluatievorm geldt enkel voor studenten **Devops & Cloud Computing** (softwareontwikkeling). Studenten **Cloud Infrastructure** (Cybersecurity & Infrastructure) volgen een andere evaluatie voor dit vak.
 
 ---
 
-## 🎯 Waarom een mondelinge verdediging?
+## Waarom een mondelinge verdediging?
 
 Met AI-tools (ChatGPT, Copilot, Claude, …) is het vandaag erg eenvoudig om een volledig werkend project te laten genereren zonder de onderliggende concepten te begrijpen. Een perfect ogende `docker-compose.yml` of een correct draaiende deployment zegt niets over of de student weet **wat** hij/zij heeft opgeleverd en **waarom** het zo werkt.
 
@@ -12,19 +12,19 @@ Daarom wordt **niet elke PE afzonderlijk mondeling verdedigd** — enkel het vol
 
 ---
 
-## 🧩 Format
+## Format
 
-|             |                                                                                                                                          |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| **Wie**     | Individueel — elke student wordt apart ondervraagd (dit vak wordt individueel uitgevoerd)                                                |
-| **Duur**    | 15 à maximum 20 minuten per student                                                                                                      |
-| **Wanneer** | Tijdens de examenperiode, na afloop van het volledige eindproject (PE1-3 + eindopdracht)                                                 |
-| **Waar**    | Standaard op de campus. Uitzonderingen (bv. online) enkel na motivatie per mail aan de docent                                            |
-| **Vereist** | Laptop met werkend project (lokaal en/of live deployment bereikbaar), terminal-toegang. Live demo's zijn aangeraden                       |
+|             |                                                                                                                     |
+| ----------- | ------------------------------------------------------------------------------------------------------------------- |
+| **Wie**     | Individueel — elke student wordt apart ondervraagd (dit vak wordt individueel uitgevoerd)                           |
+| **Duur**    | 10 à maximum 15 minuten per student                                                                                 |
+| **Wanneer** | Tijdens de examenperiode, na afloop van het volledige eindproject (PE1-3 + eindopdracht)                            |
+| **Waar**    | Standaard op de campus. Uitzonderingen (bv. online) enkel na motivatie per mail aan de docent                       |
+| **Vereist** | Laptop met werkend project (lokaal en/of live deployment bereikbaar), terminal-toegang. Live demo's zijn aangeraden |
 
 ---
 
-## 🧱 Structuur van de verdediging (± 15-20 min)
+## Structuur van de verdediging (± 10-15 min)
 
 1. **Live command demo** (± 4-5 min)
    Student voert live een opdracht uit of past iets aan op zijn/haar project (bv. "voeg een volume/ConfigMap toe", "toon de logs van de backend", "schaal deze service", "trigger een herdeployment via de CI/CD pipeline").
@@ -40,7 +40,7 @@ Daarom wordt **niet elke PE afzonderlijk mondeling verdedigd** — enkel het vol
 
 ---
 
-## 📊 Scoring — gating-multiplier
+## Scoring — gating-multiplier
 
 > [!WARNING]
 > De mondelinge verdediging levert **geen aparte punten** op, maar werkt als een **vermenigvuldigingsfactor** op de score van de [Final Assessment](4-Final-Assessment.md) (de 80% "project" component uit de ECTS-fiche): `Eindscore = Score rubriek × Factor verdediging`. PE1, PE2 en PE3 (de 20% permanente evaluatie) worden **niet** door deze factor beïnvloed — die scores staan al vast vóór de verdediging plaatsvindt. Een student met een perfect eindproject maar zonder begrip kan dus **nooit meer dan 30%** van de eindopdracht-punten behalen.
@@ -56,9 +56,9 @@ Daarom wordt **niet elke PE afzonderlijk mondeling verdedigd** — enkel het vol
 
 ---
 
-## ❓ Voorbeeldvragenbank
+## Voorbeeldvragenbank
 
-Onderstaande vragen zijn generiek en kunnen per opdracht aangepast worden.
+Onderstaande vragen zijn generieke voorbeeldvragen en niet limitatief.
 
 **Live command demo**
 
@@ -86,12 +86,12 @@ Onderstaande vragen zijn generiek en kunnen per opdracht aangepast worden.
 - Wat controleert je CI/CD pipeline, en wat gebeurt er bij een falende build?
 - Waarom gebruik je een Cloudflare tunnel in plaats van de poort rechtstreeks open te zetten?
 
-**Troubleshooting (lesgever breekt iets)**
+**Troubleshooting (Docent breekt iets)**
 
-- (Lesgever hernoemt een env var) "Je backend kan niet meer verbinden met de database — zoek uit waarom."
-- (Lesgever stopt een service/pod) "De frontend geeft een fout — diagnosticeer het probleem."
-- (Lesgever wijzigt een poort-mapping) "Je kan de applicatie niet meer bereiken in de browser — los het op."
-- (Lesgever wijzigt een Helm-value of secret) "Je productie-omgeving werkt niet meer — zoek uit waarom en herstel het."
-- (Lesgever stopt de monitoring-stack) "Je Grafana-dashboard toont geen data meer — waar zou je beginnen zoeken?"
+- (Docent hernoemt een env var) "Je backend kan niet meer verbinden met de database — zoek uit waarom."
+- (Docent stopt een service/pod) "De frontend geeft een fout — diagnosticeer het probleem."
+- (Docent wijzigt een poort-mapping) "Je kan de applicatie niet meer bereiken in de browser — los het op."
+- (Docent wijzigt een Helm-value of secret) "Je productie-omgeving werkt niet meer — zoek uit waarom en herstel het."
+- (Docent stopt de monitoring-stack) "Je Grafana-dashboard toont geen data meer — waar zou je beginnen zoeken?"
 
 ---
